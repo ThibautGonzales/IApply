@@ -8,9 +8,16 @@ os.environ.setdefault("DATABASE_URL", "sqlite://")
 
 from alembic import command  # noqa: E402
 from alembic.config import Config  # noqa: E402
-from sqlmodel import Session  # noqa: E402
+from sqlalchemy.pool import StaticPool  # noqa: E402
+from sqlmodel import Session, create_engine  # noqa: E402
 
-from app.database import engine  # noqa: E402
+from app import database  # noqa: E402
+
+# One shared connection for the whole test run: an in-memory SQLite database
+# lives inside its connection, and FastAPI's TestClient runs routes in another thread.
+database.engine = create_engine(
+    "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+)
 
 ALEMBIC_CONFIG = Config(os.path.join(os.path.dirname(__file__), "..", "alembic.ini"))
 
@@ -19,6 +26,6 @@ ALEMBIC_CONFIG = Config(os.path.join(os.path.dirname(__file__), "..", "alembic.i
 def session():
     """A session on a database built by our real migrations, emptied after each test."""
     command.upgrade(ALEMBIC_CONFIG, "head")
-    with Session(engine) as session:
+    with Session(database.engine) as session:
         yield session
     command.downgrade(ALEMBIC_CONFIG, "base")

@@ -17,3 +17,9 @@ def is_database_reachable() -> bool:
         return True
     except Exception:
         return False
+
+
+def get_session():
+    """FastAPI dependency: one database session per request, closed afterwards."""
+    with Session(engine) as session:
+        yield session

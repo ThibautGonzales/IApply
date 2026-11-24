@@ -20,7 +20,7 @@ services:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-iapply}:${POSTGRES_PASSWORD:-iapply}@db:5432/${POSTGRES_DB:-iapply}
       # Job sources (set them in .env, see .env.example)
       JOOBLE_API_KEY: ${JOOBLE_API_KEY:-}
-      JOOBLE_HOST: ${JOOBLE_HOST:-jooble.org}
+      JOOBLE_HOST: ${JOOBLE_HOST:-fr.jooble.org}
       JOOBLE_KEYWORDS: ${JOOBLE_KEYWORDS:-développeur full stack;développeur IA;GenAI}
       JOOBLE_LOCATION: ${JOOBLE_LOCATION:-Clermont-Ferrand}
       JOOBLE_RADIUS_KM: ${JOOBLE_RADIUS_KM:-40}

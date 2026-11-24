@@ -16,7 +16,7 @@ def make_job(job_id: int) -> dict:
         "salary": "",
         "source": "example.fr",
         "type": "CDI",
-        "link": f"https://jooble.org/desc/{job_id}",
+        "link": f"https://fr.jooble.org/desc/{job_id}",
         "company": "ACME",
         "updated": "2026-11-20T10:31:00.0000000",
     }
@@ -51,7 +51,7 @@ def test_to_job_offer_converts_and_cleans_a_jooble_result():
     assert offer.description == "Vous rejoindrez une équipe..."
     assert offer.salary is None  # empty string from Jooble
     assert offer.contract_type == "CDI"
-    assert offer.url == "https://jooble.org/desc/42"
+    assert offer.url == "https://fr.jooble.org/desc/42"
     assert offer.published_at == datetime(2026, 11, 20, 10, 31, tzinfo=UTC)
 
 
@@ -63,7 +63,7 @@ def test_fetch_jobs_runs_one_search_per_keyword_with_the_right_body():
 
     assert [o.external_id for o in offers] == ["1", "2"]
     url, body = requests[0]
-    assert str(url) == "https://jooble.org/api/test-key"
+    assert str(url) == "https://fr.jooble.org/api/test-key"
     assert body["location"] == "Clermont-Ferrand"
     assert body["datecreatedfrom"] == "2026-11-23"
 
@@ -82,8 +82,9 @@ def test_fetch_jobs_reads_next_page_only_when_current_page_is_full():
 def test_fetch_jobs_raises_when_jooble_answers_an_error():
     client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(403)))
 
-    with pytest.raises(httpx.HTTPStatusError):
+    with pytest.raises(jooble.JoobleError) as error:
         jooble.fetch_jobs(date(2026, 11, 23), client)
+    assert "test-key" not in str(error.value)
 
 
 def test_jooble_is_registered_as_a_source():

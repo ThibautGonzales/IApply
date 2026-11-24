@@ -19,6 +19,10 @@ RESULTS_PER_PAGE = 50
 MAX_PAGES_PER_SEARCH = 5
 
 
+class JoobleError(Exception):
+    """Jooble answered an error (bad key, wrong host, quota reached...)."""
+
+
 @dataclass
 class JoobleSettings:
     api_key: str
@@ -30,10 +34,13 @@ class JoobleSettings:
 
 def load_settings() -> JoobleSettings:
     """Read the Jooble settings from the environment (see .env.example)."""
+    api_key = os.environ.get("JOOBLE_API_KEY")
+    if not api_key:
+        raise JoobleError("JOOBLE_API_KEY is not set (see .env.example)")
     keywords = os.environ.get("JOOBLE_KEYWORDS", "développeur full stack;développeur IA;GenAI")
     return JoobleSettings(
-        api_key=os.environ["JOOBLE_API_KEY"],
-        host=os.environ.get("JOOBLE_HOST", "jooble.org"),
+        api_key=api_key,
+        host=os.environ.get("JOOBLE_HOST", "fr.jooble.org"),
         keywords=[k.strip() for k in keywords.split(";") if k.strip()],
         location=os.environ.get("JOOBLE_LOCATION", "Clermont-Ferrand"),
         radius_km=os.environ.get("JOOBLE_RADIUS_KM", "40"),
@@ -66,7 +73,9 @@ def _search(client: httpx.Client, settings: JoobleSettings, keywords: str, since
             "ResultOnPage": str(RESULTS_PER_PAGE),
         }
         response = client.post(f"https://{settings.host}/api/{settings.api_key}", json=body)
-        response.raise_for_status()
+        if response.is_error:
+            # Not raise_for_status(): its message contains the URL, and so the API key.
+            raise JoobleError(f"Jooble answered HTTP {response.status_code} on {settings.host}")
         jobs = response.json().get("jobs", [])
         offers += [to_job_offer(job) for job in jobs]
         if len(jobs) < RESULTS_PER_PAGE:
