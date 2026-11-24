@@ -1,0 +1,18 @@
+# Environment and secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
