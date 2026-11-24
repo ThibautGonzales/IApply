@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { HealthService } from './health.service';
+import { I18nService } from './core/i18n/i18n.service';
+import { Health, HealthService } from './health.service';
 import { Jobs } from './jobs/jobs';
 
 @Component({
@@ -11,13 +12,16 @@ import { Jobs } from './jobs/jobs';
 })
 export class App implements OnInit {
   private readonly healthService = inject(HealthService);
+  protected readonly i18n = inject(I18nService);
 
-  protected readonly apiStatus = signal('checking...');
+  // Raw state only: the template turns it into text, so it follows language changes.
+  protected readonly health = signal<Health | null>(null);
+  protected readonly unreachable = signal(false);
 
   ngOnInit(): void {
     this.healthService.getHealth().subscribe({
-      next: (health) => this.apiStatus.set(`API ${health.status}, database ${health.database}`),
-      error: () => this.apiStatus.set('API unreachable'),
+      next: (health) => this.health.set(health),
+      error: () => this.unreachable.set(true),
     });
   }
 }

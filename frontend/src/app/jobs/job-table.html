@@ -2,11 +2,11 @@
   <table>
     <thead>
       <tr>
-        <th>Published</th>
-        <th>Title</th>
-        <th>Company</th>
-        <th>Location</th>
-        <th>Contract</th>
+        <th>{{ i18n.t('table.published') }}</th>
+        <th>{{ i18n.t('table.title') }}</th>
+        <th>{{ i18n.t('table.company') }}</th>
+        <th>{{ i18n.t('table.location') }}</th>
+        <th>{{ i18n.t('table.contract') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -24,5 +24,5 @@
     </tbody>
   </table>
 } @else {
-  <p>No offers yet.</p>
+  <p>{{ i18n.t('jobs.none') }}</p>
 }

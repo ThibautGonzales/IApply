@@ -2,3 +2,20 @@ main {
   font-family: system-ui, sans-serif;
   padding: 2rem;
 }
+
+header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.languages button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.languages button.active {
+  font-weight: bold;
+}

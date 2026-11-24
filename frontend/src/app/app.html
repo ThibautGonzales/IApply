@@ -1,7 +1,33 @@
 <main>
-  <h1>IApply</h1>
+  <header>
+    <h1>IApply</h1>
+    <div class="languages" role="group" [attr.aria-label]="i18n.t('language.label')">
+      @for (language of i18n.languages; track language; let last = $last) {
+        <button
+          type="button"
+          [class.active]="language === i18n.language()"
+          [attr.aria-pressed]="language === i18n.language()"
+          (click)="i18n.setLanguage(language)"
+        >
+          {{ language.toUpperCase() }}
+        </button>
+        @if (!last) {
+          <span aria-hidden="true">/</span>
+        }
+      }
+    </div>
+  </header>
   <p>
-    Backend status: <strong>{{ apiStatus() }}</strong>
+    {{ i18n.t('backend.label') }}
+    <strong>
+      @if (health(); as health) {
+        API {{ health.status }}, {{ i18n.t('backend.database') }} {{ health.database }}
+      } @else if (unreachable()) {
+        {{ i18n.t('backend.unreachable') }}
+      } @else {
+        {{ i18n.t('backend.checking') }}
+      }
+    </strong>
   </p>
   <app-jobs />
 </main>

@@ -1,16 +1,16 @@
 <section>
-  <h2>Job offers</h2>
+  <h2>{{ i18n.t('jobs.title') }}</h2>
 
   <button type="button" (click)="collect()" [disabled]="collecting()">
-    {{ collecting() ? 'Collecting...' : 'Collect' }}
+    {{ collecting() ? i18n.t('collect.running') : i18n.t('collect.button') }}
   </button>
   @if (message()) {
     <p class="message">{{ message() }}</p>
   }
 
-  <h3>On-site ({{ onSiteJobs().length }})</h3>
+  <h3>{{ i18n.t('jobs.onSite') }} ({{ onSiteJobs().length }})</h3>
   <app-job-table class="on-site" [jobs]="onSiteJobs()" />
 
-  <h3>Remote ({{ remoteJobs().length }})</h3>
+  <h3>{{ i18n.t('jobs.remote') }} ({{ remoteJobs().length }})</h3>
   <app-job-table class="remote" [jobs]="remoteJobs()" />
 </section>
