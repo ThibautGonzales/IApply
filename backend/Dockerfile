@@ -6,6 +6,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY alembic.ini .
+COPY migrations ./migrations
 COPY app ./app
 
-CMD ["fastapi", "run", "app/main.py", "--port", "8000"]
+# Bring the database schema up to date, then start the API.
+CMD ["sh", "-c", "alembic upgrade head && fastapi run app/main.py --port 8000"]

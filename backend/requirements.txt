@@ -1,4 +1,5 @@
 fastapi[standard]==0.165.*
 sqlmodel==0.0.50
+alembic==1.20.*
 psycopg[binary]==3.3.*
 pytest==9.*
