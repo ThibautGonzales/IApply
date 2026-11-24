@@ -77,7 +77,9 @@ def _search(client: httpx.Client, settings: JoobleSettings, keywords: str, since
             # Not raise_for_status(): its message contains the URL, and so the API key.
             raise JoobleError(f"Jooble answered HTTP {response.status_code} on {settings.host}")
         jobs = response.json().get("jobs", [])
-        offers += [to_job_offer(job) for job in jobs]
+        # Jooble treats `datecreatedfrom` as a hint and can still return months-old
+        # offers, so we filter on the publication date ourselves.
+        offers += [offer for offer in map(to_job_offer, jobs) if offer.published_at.date() >= since]
         if len(jobs) < RESULTS_PER_PAGE:
             break
     return offers

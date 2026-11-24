@@ -89,3 +89,12 @@ def test_fetch_jobs_raises_when_jooble_answers_an_error():
 
 def test_jooble_is_registered_as_a_source():
     assert SOURCES["jooble"] is jooble.fetch_jobs
+
+
+def test_fetch_jobs_drops_offers_older_than_since_even_if_jooble_returns_them():
+    old_job = make_job(1) | {"updated": "2026-07-02T00:00:00.0000000"}
+    client = fake_client({"full stack": [[old_job, make_job(2)]], "GenAI": [[]]}, [])
+
+    offers = jooble.fetch_jobs(date(2026, 11, 20), client)
+
+    assert [o.external_id for o in offers] == ["2"]
