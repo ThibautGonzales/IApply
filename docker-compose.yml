@@ -24,6 +24,9 @@ services:
       JOOBLE_KEYWORDS: ${JOOBLE_KEYWORDS:-développeur full stack;développeur IA;GenAI}
       JOOBLE_LOCATION: ${JOOBLE_LOCATION:-Clermont-Ferrand}
       JOOBLE_RADIUS_KM: ${JOOBLE_RADIUS_KM:-40}
+      JOOBLE_INCLUDE_REMOTE: ${JOOBLE_INCLUDE_REMOTE:-true}
+      JOOBLE_REMOTE_LOCATION: ${JOOBLE_REMOTE_LOCATION:-France}
+      JOOBLE_REMOTE_KEYWORD: ${JOOBLE_REMOTE_KEYWORD:-télétravail}
     ports:
       - "8000:8000"
     depends_on:

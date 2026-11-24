@@ -30,6 +30,18 @@ class JoobleSettings:
     keywords: list[str]
     location: str
     radius_km: str
+    include_remote: bool
+    remote_location: str  # where remote offers are searched, e.g. the whole country
+    remote_keyword: str  # added to each keyword for the remote searches
+
+
+@dataclass
+class Search:
+    """One Jooble query: keywords around a place."""
+
+    keywords: str
+    location: str
+    radius_km: str = ""  # empty: no radius sent
 
 
 def load_settings() -> JoobleSettings:
@@ -44,34 +56,46 @@ def load_settings() -> JoobleSettings:
         keywords=[k.strip() for k in keywords.split(";") if k.strip()],
         location=os.environ.get("JOOBLE_LOCATION", "Clermont-Ferrand"),
         radius_km=os.environ.get("JOOBLE_RADIUS_KM", "40"),
+        include_remote=os.environ.get("JOOBLE_INCLUDE_REMOTE", "true").lower() == "true",
+        remote_location=os.environ.get("JOOBLE_REMOTE_LOCATION", "France"),
+        remote_keyword=os.environ.get("JOOBLE_REMOTE_KEYWORD", "télétravail"),
     )
 
 
+def build_searches(settings: JoobleSettings) -> list[Search]:
+    """One local search per keyword, plus one remote search per keyword if enabled."""
+    searches = [Search(k, settings.location, settings.radius_km) for k in settings.keywords]
+    if settings.include_remote:
+        searches += [Search(f"{k} {settings.remote_keyword}", settings.remote_location) for k in settings.keywords]
+    return searches
+
+
 def fetch_jobs(since: date, client: httpx.Client | None = None) -> list[JobOffer]:
-    """Return the Jooble offers published since `since`, for every configured keyword."""
+    """Return the Jooble offers published since `since`, for every configured search."""
     if client is None:
         with httpx.Client(timeout=30) as client:
             return fetch_jobs(since, client)
 
     settings = load_settings()
     offers: list[JobOffer] = []
-    for keywords in settings.keywords:
-        offers += _search(client, settings, keywords, since)
+    for search in build_searches(settings):
+        offers += _search(client, settings, search, since)
     return offers
 
 
-def _search(client: httpx.Client, settings: JoobleSettings, keywords: str, since: date) -> list[JobOffer]:
+def _search(client: httpx.Client, settings: JoobleSettings, search: Search, since: date) -> list[JobOffer]:
     """Run one search, page by page, until a page comes back incomplete."""
     offers: list[JobOffer] = []
     for page in range(1, MAX_PAGES_PER_SEARCH + 1):
         body = {
-            "keywords": keywords,
-            "location": settings.location,
-            "radius": settings.radius_km,
+            "keywords": search.keywords,
+            "location": search.location,
             "datecreatedfrom": since.isoformat(),  # "YYYY-MM-DD"
             "page": str(page),
             "ResultOnPage": str(RESULTS_PER_PAGE),
         }
+        if search.radius_km:
+            body["radius"] = search.radius_km
         response = client.post(f"https://{settings.host}/api/{settings.api_key}", json=body)
         if response.is_error:
             # Not raise_for_status(): its message contains the URL, and so the API key.

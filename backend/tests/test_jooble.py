@@ -26,6 +26,7 @@ def make_job(job_id: int) -> dict:
 def jooble_env(monkeypatch):
     monkeypatch.setenv("JOOBLE_API_KEY", "test-key")
     monkeypatch.setenv("JOOBLE_KEYWORDS", "full stack;GenAI")
+    monkeypatch.setenv("JOOBLE_INCLUDE_REMOTE", "false")  # remote searches have their own tests
 
 
 def fake_client(pages_by_keywords: dict[str, list[list[dict]]], requests: list) -> httpx.Client:
@@ -98,3 +99,28 @@ def test_fetch_jobs_drops_offers_older_than_since_even_if_jooble_returns_them():
     offers = jooble.fetch_jobs(date(2026, 11, 20), client)
 
     assert [o.external_id for o in offers] == ["2"]
+
+
+def test_remote_searches_are_added_when_enabled(monkeypatch):
+    monkeypatch.setenv("JOOBLE_INCLUDE_REMOTE", "true")
+
+    searches = jooble.build_searches(jooble.load_settings())
+
+    assert [(s.keywords, s.location, s.radius_km) for s in searches] == [
+        ("full stack", "Clermont-Ferrand", "40"),
+        ("GenAI", "Clermont-Ferrand", "40"),
+        ("full stack télétravail", "France", ""),
+        ("GenAI télétravail", "France", ""),
+    ]
+
+
+def test_remote_search_sends_no_radius(monkeypatch):
+    monkeypatch.setenv("JOOBLE_INCLUDE_REMOTE", "true")
+    monkeypatch.setenv("JOOBLE_KEYWORDS", "full stack")
+    requests = []
+    client = fake_client({"full stack": [[]], "full stack télétravail": [[make_job(1)]]}, requests)
+
+    offers = jooble.fetch_jobs(date(2026, 11, 20), client)
+
+    assert [o.external_id for o in offers] == ["1"]
+    assert "radius" not in requests[1][1]
