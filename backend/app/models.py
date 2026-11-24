@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Text, UniqueConstraint
+from sqlalchemy import DateTime, Text, UniqueConstraint, false
 from sqlmodel import Field, SQLModel
 
 
@@ -26,5 +26,7 @@ class JobOffer(SQLModel, table=True):
     contract_type: str | None = Field(default=None, max_length=100)
     description: str | None = Field(default=None, sa_type=Text)
     url: str = Field(sa_type=Text)  # direct link to the original posting
+    # True for a full remote offer. server_default fills the rows saved before this column existed.
+    remote: bool = Field(default=False, sa_column_kwargs={"server_default": false()})
     published_at: datetime = Field(sa_type=DateTime(timezone=True), index=True)
     collected_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))

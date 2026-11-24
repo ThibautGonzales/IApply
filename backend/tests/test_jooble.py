@@ -125,3 +125,21 @@ def test_remote_search_sends_no_radius(monkeypatch):
 
     assert requests[1][1]["location"] == "Télétravail"
     assert "radius" not in requests[1][1]
+
+
+def test_offers_are_flagged_remote_by_search_or_location():
+    assert jooble.to_job_offer(make_job(1)).remote is False
+    assert jooble.to_job_offer(make_job(1), from_remote_search=True).remote is True
+    assert jooble.to_job_offer(make_job(1) | {"location": "Télétravail"}).remote is True
+
+
+def test_offer_found_by_local_and_remote_search_is_kept_once_as_remote(monkeypatch):
+    monkeypatch.setenv("JOOBLE_INCLUDE_REMOTE", "true")
+    monkeypatch.setenv("JOOBLE_KEYWORDS", "full stack")
+    # The fake client answers by keywords only, so both searches return job 1.
+    client = fake_client({"full stack": [[make_job(1)]]}, [])
+
+    offers = jooble.fetch_jobs(date(2026, 11, 20), client)
+
+    assert len(offers) == 1
+    assert offers[0].remote is True

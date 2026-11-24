@@ -1,18 +1,19 @@
-import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { JobTable } from './job-table';
 import { JobOffer, JobsService } from './jobs.service';
 
-/** Collect button and list of saved job offers. */
+/** Collect button and the saved job offers, on-site and remote apart. */
 @Component({
-  imports: [DatePipe],
+  imports: [JobTable],
   selector: 'app-jobs',
-  styleUrl: './jobs.css',
   templateUrl: './jobs.html',
 })
 export class Jobs implements OnInit {
   private readonly jobsService = inject(JobsService);
 
   protected readonly jobs = signal<JobOffer[]>([]);
+  protected readonly onSiteJobs = computed(() => this.jobs().filter((job) => !job.remote));
+  protected readonly remoteJobs = computed(() => this.jobs().filter((job) => job.remote));
   protected readonly collecting = signal(false);
   protected readonly message = signal('');
 

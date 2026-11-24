@@ -43,6 +43,7 @@ class Search:
     keywords: str
     location: str
     radius_km: str = ""  # empty: no radius sent
+    remote: bool = False  # the offers it finds are full remote
 
 
 def load_settings() -> JoobleSettings:
@@ -68,7 +69,8 @@ def build_searches(settings: JoobleSettings) -> list[Search]:
     searches = [Search(k, settings.location, settings.radius_km) for k in settings.keywords]
     if settings.include_remote:
         searches += [
-            Search(f"{k} {settings.remote_keyword}".strip(), settings.remote_location) for k in settings.keywords
+            Search(f"{k} {settings.remote_keyword}".strip(), settings.remote_location, remote=True)
+            for k in settings.keywords
         ]
     return searches
 
@@ -80,10 +82,15 @@ def fetch_jobs(since: date, client: httpx.Client | None = None) -> list[JobOffer
             return fetch_jobs(since, client)
 
     settings = load_settings()
-    offers: list[JobOffer] = []
+    offers_by_id: dict[str, JobOffer] = {}
     for search in build_searches(settings):
-        offers += _search(client, settings, search, since)
-    return offers
+        for offer in _search(client, settings, search, since):
+            # An offer found by both a local and a remote search is kept once, as remote.
+            if offer.external_id in offers_by_id:
+                offers_by_id[offer.external_id].remote |= offer.remote
+            else:
+                offers_by_id[offer.external_id] = offer
+    return list(offers_by_id.values())
 
 
 def _search(client: httpx.Client, settings: JoobleSettings, search: Search, since: date) -> list[JobOffer]:
@@ -106,25 +113,29 @@ def _search(client: httpx.Client, settings: JoobleSettings, search: Search, sinc
         jobs = response.json().get("jobs", [])
         # Jooble treats `datecreatedfrom` as a hint and can still return months-old
         # offers, so we filter on the publication date ourselves.
-        offers += [offer for offer in map(to_job_offer, jobs) if offer.published_at.date() >= since]
+        page_offers = [to_job_offer(job, search.remote) for job in jobs]
+        offers += [offer for offer in page_offers if offer.published_at.date() >= since]
         if len(jobs) < RESULTS_PER_PAGE:
             break
     return offers
 
 
-def to_job_offer(job: dict) -> JobOffer:
+def to_job_offer(job: dict, from_remote_search: bool = False) -> JobOffer:
     """Convert one Jooble result into our JobOffer model."""
+    location = _clean(job.get("location") or "") or None
     return JobOffer(
         source=SOURCE_NAME,
         external_id=str(job["id"]),
         title=_clean(job["title"]),
         company=_clean(job.get("company") or "") or None,
-        location=_clean(job.get("location") or "") or None,
+        location=location,
         salary=job.get("salary") or None,
         contract_type=job.get("type") or None,
         description=_clean(job.get("snippet") or "") or None,
         url=job["link"],
         published_at=_parse_date(job["updated"]),
+        # A local search can also return remote offers: Jooble then gives "Télétravail" as location.
+        remote=from_remote_search or "télétravail" in (location or "").lower(),
     )
 
 

@@ -14,6 +14,7 @@ export interface JobOffer {
   contract_type: string | null;
   description: string | null;
   url: string;
+  remote: boolean;
   published_at: string;
   collected_at: string;
 }
