@@ -1,20 +1,16 @@
 <section>
-  <h2 i18n="@@jobOffersTitle">Job offers</h2>
+  <h2>{{ i18n.t('jobs.title') }}</h2>
 
   <button type="button" (click)="collect()" [disabled]="collecting()">
-    @if (collecting()) {
-      <ng-container i18n="@@collectingButton">Collecting...</ng-container>
-    } @else {
-      <ng-container i18n="@@collectButton">Collect</ng-container>
-    }
+    {{ collecting() ? i18n.t('collect.running') : i18n.t('collect.button') }}
   </button>
   @if (message()) {
     <p class="message">{{ message() }}</p>
   }
 
-  <h3 i18n="@@onSiteTitle">On-site ({{ onSiteJobs().length }})</h3>
+  <h3>{{ i18n.t('jobs.onSite') }} ({{ onSiteJobs().length }})</h3>
   <app-job-table class="on-site" [jobs]="onSiteJobs()" />
 
-  <h3 i18n="@@remoteTitle">Remote ({{ remoteJobs().length }})</h3>
+  <h3>{{ i18n.t('jobs.remote') }} ({{ remoteJobs().length }})</h3>
   <app-job-table class="remote" [jobs]="remoteJobs()" />
 </section>

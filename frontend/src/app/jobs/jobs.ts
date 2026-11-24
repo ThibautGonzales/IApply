@@ -1,6 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { I18nService } from '../core/i18n/i18n.service';
+import { TranslationKey } from '../core/i18n/translations';
 import { JobTable } from './job-table';
-import { JobOffer, JobsService } from './jobs.service';
+import { CollectionResult, JobOffer, JobsService } from './jobs.service';
 
 /** Collect button and the saved job offers, on-site and remote apart. */
 @Component({
@@ -10,12 +12,30 @@ import { JobOffer, JobsService } from './jobs.service';
 })
 export class Jobs implements OnInit {
   private readonly jobsService = inject(JobsService);
+  protected readonly i18n = inject(I18nService);
 
   protected readonly jobs = signal<JobOffer[]>([]);
   protected readonly onSiteJobs = computed(() => this.jobs().filter((job) => !job.remote));
   protected readonly remoteJobs = computed(() => this.jobs().filter((job) => job.remote));
   protected readonly collecting = signal(false);
-  protected readonly message = signal('');
+  protected readonly result = signal<CollectionResult | null>(null);
+  protected readonly failed = signal(false);
+
+  // Built from the raw result, so the message is translated again when the language changes.
+  protected readonly message = computed(() => {
+    const t = (key: TranslationKey) => this.i18n.t(key);
+    const result = this.result();
+    if (this.failed()) {
+      return t('collect.failed');
+    }
+    if (!result) {
+      return '';
+    }
+    const errors = result.errors.length
+      ? ` ${t('collect.errors')} ${result.errors.join(', ')}`
+      : '';
+    return `${result.added} ${t('collect.newOffers')} (${result.fetched} ${t('collect.found')}).${errors}`;
+  });
 
   ngOnInit(): void {
     this.loadJobs();
@@ -23,21 +43,16 @@ export class Jobs implements OnInit {
 
   protected collect(): void {
     this.collecting.set(true);
-    this.message.set('');
+    this.result.set(null);
+    this.failed.set(false);
     this.jobsService.collect().subscribe({
       next: (result) => {
-        const errors = result.errors.length
-          ? $localize`:@@collectErrors: Errors: ${result.errors.join(', ')}:errorList:`
-          : '';
-        this.message.set(
-          $localize`:@@collectSummary:${result.added}:added: new offers (${result.fetched}:fetched: found).` +
-            errors,
-        );
+        this.result.set(result);
         this.collecting.set(false);
         this.loadJobs();
       },
       error: () => {
-        this.message.set($localize`:@@collectFailed:Collection failed: API unreachable.`);
+        this.failed.set(true);
         this.collecting.set(false);
       },
     });

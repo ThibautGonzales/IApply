@@ -12,12 +12,6 @@
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
-      "i18n": {
-        "sourceLocale": "en",
-        "locales": {
-          "fr": "src/locale/messages.fr.xlf"
-        }
-      },
       "architect": {
         "build": {
           "builder": "@angular/build:application",
@@ -30,8 +24,9 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css"],
-            "polyfills": ["@angular/localize/init"]
+            "styles": [
+              "src/styles.css"
+            ]
           },
           "configurations": {
             "production": {
@@ -53,9 +48,6 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
-            },
-            "fr": {
-              "localize": ["fr"]
             }
           },
           "defaultConfiguration": "production"
@@ -68,9 +60,6 @@
             },
             "development": {
               "buildTarget": "frontend:build:development"
-            },
-            "fr": {
-              "buildTarget": "frontend:build:development,fr"
             }
           },
           "defaultConfiguration": "development",
@@ -80,12 +69,6 @@
         },
         "test": {
           "builder": "@angular/build:unit-test"
-        },
-        "extract-i18n": {
-          "builder": "@angular/build:extract-i18n",
-          "options": {
-            "outputPath": "src/locale"
-          }
         }
       }
     }
