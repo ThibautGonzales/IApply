@@ -20,9 +20,22 @@ See [DECISIONS.md](DECISIONS.md) for why each choice was made.
 IApply/
 ├── backend/    # FastAPI application (API, database, LLM calls)
 ├── frontend/   # Angular application (user interface)
+├── docker-compose.yml  # Runs the database and the backend together
 └── DECISIONS.md
 ```
 
 ## Getting started
 
-Setup instructions will be added as the project grows.
+Requirements: Docker Desktop.
+
+```bash
+docker compose up --build
+```
+
+Then open http://localhost:8000/health: it should answer
+`{"status": "ok", "database": "ok"}`.
+
+Default database credentials are set in `docker-compose.yml`. To change them,
+copy `.env.example` to `.env` and edit it.
+
+To run the backend without Docker, see [backend/README.md](backend/README.md).

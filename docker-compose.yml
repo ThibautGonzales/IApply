@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-iapply}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-iapply}
+      POSTGRES_DB: ${POSTGRES_DB:-iapply}
+    ports:
+      - "5432:5432" # Lets you reach the database from your machine (backend run locally, DB client)
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-iapply}:${POSTGRES_PASSWORD:-iapply}@db:5432/${POSTGRES_DB:-iapply}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
