@@ -52,3 +52,14 @@ Architecture decisions and the reason behind each one.
 - **Migrations run at backend startup** (`alembic upgrade head` in the Dockerfile), and
   tests build their database with the same migrations.
 - **UI texts stay in English** for now; French/English switching (i18n) is a separate feature.
+
+## 2026-11-24 — Interface languages (English / French)
+
+- **A small `I18nService` with TypeScript dictionaries** (`frontend/src/app/core/i18n/`),
+  the same system as MorningDevNews. The language switches at runtime with the EN / FR
+  buttons, without reloading, and the choice is saved in `localStorage`.
+- **Not `@angular/localize`**: it builds one site per language, so switching would reload
+  another site; no extra dependency either.
+- **English is the reference list of keys**: TypeScript reports any key missing in French.
+- **Components keep raw data** (collection result, API health) and build texts in the
+  template or a `computed`, so texts follow a language change.
