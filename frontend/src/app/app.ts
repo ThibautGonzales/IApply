@@ -1,9 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HealthService } from './health.service';
+import { Jobs } from './jobs/jobs';
 
 @Component({
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, Jobs],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',

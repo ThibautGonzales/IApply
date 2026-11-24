@@ -1,0 +1,16 @@
+<section>
+  <h2>Job offers</h2>
+
+  <button type="button" (click)="collect()" [disabled]="collecting()">
+    {{ collecting() ? 'Collecting...' : 'Collect' }}
+  </button>
+  @if (message()) {
+    <p class="message">{{ message() }}</p>
+  }
+
+  <h3>On-site ({{ onSiteJobs().length }})</h3>
+  <app-job-table class="on-site" [jobs]="onSiteJobs()" />
+
+  <h3>Remote ({{ remoteJobs().length }})</h3>
+  <app-job-table class="remote" [jobs]="remoteJobs()" />
+</section>

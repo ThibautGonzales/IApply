@@ -1,0 +1,28 @@
+@if (jobs().length) {
+  <table>
+    <thead>
+      <tr>
+        <th>Published</th>
+        <th>Title</th>
+        <th>Company</th>
+        <th>Location</th>
+        <th>Contract</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (job of jobs(); track job.id) {
+        <tr>
+          <td>{{ job.published_at | date: 'dd/MM/yyyy' }}</td>
+          <td>
+            <a [href]="job.url" target="_blank" rel="noopener">{{ job.title }}</a>
+          </td>
+          <td>{{ job.company }}</td>
+          <td>{{ job.location }}</td>
+          <td>{{ job.contract_type }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+} @else {
+  <p>No offers yet.</p>
+}
