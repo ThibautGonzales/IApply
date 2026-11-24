@@ -31,8 +31,9 @@ class JoobleSettings:
     location: str
     radius_km: str
     include_remote: bool
-    remote_location: str  # where remote offers are searched, e.g. the whole country
-    remote_keyword: str  # added to each keyword for the remote searches
+    # Jooble lists remote offers under the "Télétravail" location.
+    remote_location: str
+    remote_keyword: str  # optional word added to each keyword for the remote searches
 
 
 @dataclass
@@ -57,8 +58,8 @@ def load_settings() -> JoobleSettings:
         location=os.environ.get("JOOBLE_LOCATION", "Clermont-Ferrand"),
         radius_km=os.environ.get("JOOBLE_RADIUS_KM", "40"),
         include_remote=os.environ.get("JOOBLE_INCLUDE_REMOTE", "true").lower() == "true",
-        remote_location=os.environ.get("JOOBLE_REMOTE_LOCATION", "France"),
-        remote_keyword=os.environ.get("JOOBLE_REMOTE_KEYWORD", "télétravail"),
+        remote_location=os.environ.get("JOOBLE_REMOTE_LOCATION", "Télétravail"),
+        remote_keyword=os.environ.get("JOOBLE_REMOTE_KEYWORD", ""),
     )
 
 
@@ -66,7 +67,9 @@ def build_searches(settings: JoobleSettings) -> list[Search]:
     """One local search per keyword, plus one remote search per keyword if enabled."""
     searches = [Search(k, settings.location, settings.radius_km) for k in settings.keywords]
     if settings.include_remote:
-        searches += [Search(f"{k} {settings.remote_keyword}", settings.remote_location) for k in settings.keywords]
+        searches += [
+            Search(f"{k} {settings.remote_keyword}".strip(), settings.remote_location) for k in settings.keywords
+        ]
     return searches
 
 
@@ -115,8 +118,8 @@ def to_job_offer(job: dict) -> JobOffer:
         source=SOURCE_NAME,
         external_id=str(job["id"]),
         title=_clean(job["title"]),
-        company=job.get("company") or None,
-        location=job.get("location") or None,
+        company=_clean(job.get("company") or "") or None,
+        location=_clean(job.get("location") or "") or None,
         salary=job.get("salary") or None,
         contract_type=job.get("type") or None,
         description=_clean(job.get("snippet") or "") or None,

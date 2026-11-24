@@ -11,7 +11,7 @@ def make_job(job_id: int) -> dict:
     return {
         "id": job_id,
         "title": "D&eacute;veloppeur <b>full stack</b>",
-        "location": "Clermont-Ferrand",
+        "location": "Saint-Jacques-de-la-Lande &amp; co",
         "snippet": "&nbsp;Vous rejoindrez une <b>équipe</b>...",
         "salary": "",
         "source": "example.fr",
@@ -50,6 +50,7 @@ def test_to_job_offer_converts_and_cleans_a_jooble_result():
     assert offer.external_id == "42"
     assert offer.title == "Développeur full stack"
     assert offer.description == "Vous rejoindrez une équipe..."
+    assert offer.location == "Saint-Jacques-de-la-Lande & co"
     assert offer.salary is None  # empty string from Jooble
     assert offer.contract_type == "CDI"
     assert offer.url == "https://fr.jooble.org/desc/42"
@@ -109,8 +110,8 @@ def test_remote_searches_are_added_when_enabled(monkeypatch):
     assert [(s.keywords, s.location, s.radius_km) for s in searches] == [
         ("full stack", "Clermont-Ferrand", "40"),
         ("GenAI", "Clermont-Ferrand", "40"),
-        ("full stack télétravail", "France", ""),
-        ("GenAI télétravail", "France", ""),
+        ("full stack", "Télétravail", ""),
+        ("GenAI", "Télétravail", ""),
     ]
 
 
@@ -118,9 +119,9 @@ def test_remote_search_sends_no_radius(monkeypatch):
     monkeypatch.setenv("JOOBLE_INCLUDE_REMOTE", "true")
     monkeypatch.setenv("JOOBLE_KEYWORDS", "full stack")
     requests = []
-    client = fake_client({"full stack": [[]], "full stack télétravail": [[make_job(1)]]}, requests)
+    client = fake_client({"full stack": [[]]}, requests)
 
-    offers = jooble.fetch_jobs(date(2026, 11, 20), client)
+    jooble.fetch_jobs(date(2026, 11, 20), client)
 
-    assert [o.external_id for o in offers] == ["1"]
+    assert requests[1][1]["location"] == "Télétravail"
     assert "radius" not in requests[1][1]
