@@ -59,13 +59,13 @@ def test_fetch_jobs_runs_one_search_per_keyword_with_the_right_body():
     requests = []
     client = fake_client({"full stack": [[make_job(1)]], "GenAI": [[make_job(2)]]}, requests)
 
-    offers = jooble.fetch_jobs(date(2026, 11, 23), client)
+    offers = jooble.fetch_jobs(date(2026, 11, 20), client)
 
     assert [o.external_id for o in offers] == ["1", "2"]
     url, body = requests[0]
     assert str(url) == "https://fr.jooble.org/api/test-key"
     assert body["location"] == "Clermont-Ferrand"
-    assert body["datecreatedfrom"] == "2026-11-23"
+    assert body["datecreatedfrom"] == "2026-11-20"
 
 
 def test_fetch_jobs_reads_next_page_only_when_current_page_is_full():
@@ -73,7 +73,7 @@ def test_fetch_jobs_reads_next_page_only_when_current_page_is_full():
     full_page = [make_job(i) for i in range(jooble.RESULTS_PER_PAGE)]
     client = fake_client({"full stack": [full_page, [make_job(999)]], "GenAI": [[]]}, requests)
 
-    offers = jooble.fetch_jobs(date(2026, 11, 23), client)
+    offers = jooble.fetch_jobs(date(2026, 11, 20), client)
 
     assert len(offers) == jooble.RESULTS_PER_PAGE + 1
     assert len(requests) == 3  # 2 pages for "full stack", 1 for "GenAI"
@@ -83,7 +83,7 @@ def test_fetch_jobs_raises_when_jooble_answers_an_error():
     client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(403)))
 
     with pytest.raises(jooble.JoobleError) as error:
-        jooble.fetch_jobs(date(2026, 11, 23), client)
+        jooble.fetch_jobs(date(2026, 11, 20), client)
     assert "test-key" not in str(error.value)
 
 
