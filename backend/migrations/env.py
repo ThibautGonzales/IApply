@@ -3,6 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlmodel import SQLModel
 
+import app.models  # noqa: F401  (registers the tables in SQLModel.metadata)
 from app.database import engine
 
 config = context.config
