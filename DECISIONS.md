@@ -24,3 +24,9 @@ Architecture decisions and the reason behind each one.
 3. An LLM scores each offer against the profile; offers under a threshold are hidden.
 4. Ranked list of offers with a direct link to each one.
 5. Later: cover letter generation in the style of the user's existing letters.
+
+## 2026-11-24 — Frontend to backend calls
+
+- **The frontend calls `/api/...` on its own origin.** In Docker, nginx forwards
+  `/api/` to the backend; with `ng serve`, `proxy.conf.json` does the same. The
+  browser only ever talks to one origin, so no CORS setup is needed.
