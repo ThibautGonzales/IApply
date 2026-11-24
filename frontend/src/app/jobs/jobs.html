@@ -1,16 +1,20 @@
 <section>
-  <h2>Job offers</h2>
+  <h2 i18n="@@jobOffersTitle">Job offers</h2>
 
   <button type="button" (click)="collect()" [disabled]="collecting()">
-    {{ collecting() ? 'Collecting...' : 'Collect' }}
+    @if (collecting()) {
+      <ng-container i18n="@@collectingButton">Collecting...</ng-container>
+    } @else {
+      <ng-container i18n="@@collectButton">Collect</ng-container>
+    }
   </button>
   @if (message()) {
     <p class="message">{{ message() }}</p>
   }
 
-  <h3>On-site ({{ onSiteJobs().length }})</h3>
+  <h3 i18n="@@onSiteTitle">On-site ({{ onSiteJobs().length }})</h3>
   <app-job-table class="on-site" [jobs]="onSiteJobs()" />
 
-  <h3>Remote ({{ remoteJobs().length }})</h3>
+  <h3 i18n="@@remoteTitle">Remote ({{ remoteJobs().length }})</h3>
   <app-job-table class="remote" [jobs]="remoteJobs()" />
 </section>

@@ -1,7 +1,8 @@
 <main>
   <h1>IApply</h1>
   <p>
-    Backend status: <strong>{{ apiStatus() }}</strong>
+    <ng-container i18n="@@backendStatusLabel">Backend status:</ng-container>
+    <strong>{{ apiStatus() }}</strong>
   </p>
   <app-jobs />
 </main>

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en" target-language="fr" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="backendStatusLabel" datatype="html">
+        <source>Backend status:</source>
+        <target>État du backend :</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/app.html</context>
+          <context context-type="linenumber">4,5</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="backendStatusChecking" datatype="html">
+        <source>checking...</source>
+        <target>vérification...</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/app.ts</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="backendStatusOk" datatype="html">
+        <source>API <x id="apiStatus" equiv-text="health.status"/>, database <x id="databaseStatus" equiv-text="health.database"/></source>
+        <target>API <x id="apiStatus" equiv-text="health.status"/>, base de données <x id="databaseStatus" equiv-text="health.database"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/app.ts</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="backendStatusUnreachable" datatype="html">
+        <source>API unreachable</source>
+        <target>API injoignable</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/app.ts</context>
+          <context context-type="linenumber">23</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tablePublished" datatype="html">
+        <source>Published</source>
+        <target>Publiée le</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/job-table.html</context>
+          <context context-type="linenumber">5,6</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tableTitle" datatype="html">
+        <source>Title</source>
+        <target>Intitulé</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/job-table.html</context>
+          <context context-type="linenumber">6,7</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tableCompany" datatype="html">
+        <source>Company</source>
+        <target>Entreprise</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/job-table.html</context>
+          <context context-type="linenumber">7,8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tableLocation" datatype="html">
+        <source>Location</source>
+        <target>Lieu</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/job-table.html</context>
+          <context context-type="linenumber">8,9</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tableContract" datatype="html">
+        <source>Contract</source>
+        <target>Contrat</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/job-table.html</context>
+          <context context-type="linenumber">9,11</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="noOffers" datatype="html">
+        <source>No offers yet.</source>
+        <target>Aucune offre pour le moment.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/job-table.html</context>
+          <context context-type="linenumber">27,29</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="jobOffersTitle" datatype="html">
+        <source>Job offers</source>
+        <target>Offres d'emploi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/jobs.html</context>
+          <context context-type="linenumber">2,4</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="collectingButton" datatype="html">
+        <source>Collecting...</source>
+        <target>Collecte en cours...</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/jobs.html</context>
+          <context context-type="linenumber">6,8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="collectButton" datatype="html">
+        <source>Collect</source>
+        <target>Collecter</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/jobs.html</context>
+          <context context-type="linenumber">8,10</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="onSiteTitle" datatype="html">
+        <source>On-site (<x id="INTERPOLATION" equiv-text="{{ onSiteJobs().length }}"/>)</source>
+        <target>Sur site (<x id="INTERPOLATION" equiv-text="{{ onSiteJobs().length }}"/>)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/jobs.html</context>
+          <context context-type="linenumber">15,16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="remoteTitle" datatype="html">
+        <source>Remote (<x id="INTERPOLATION" equiv-text="{{ remoteJobs().length }}"/>)</source>
+        <target>Télétravail (<x id="INTERPOLATION" equiv-text="{{ remoteJobs().length }}"/>)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/jobs.html</context>
+          <context context-type="linenumber">18,19</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="collectErrors" datatype="html">
+        <source> Errors: <x id="errorList" equiv-text="result.errors.join(&apos;, &apos;)"/></source>
+        <target> Erreurs : <x id="errorList" equiv-text="result.errors.join(&apos;, &apos;)"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/jobs.ts</context>
+          <context context-type="linenumber">30</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="collectSummary" datatype="html">
+        <source><x id="added" equiv-text="result.added"/> new offers (<x id="fetched" equiv-text="result.fetched"/> found).</source>
+        <target><x id="added" equiv-text="result.added"/> nouvelle(s) offre(s) (<x id="fetched" equiv-text="result.fetched"/> trouvée(s)).</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/jobs.ts</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="collectFailed" datatype="html">
+        <source>Collection failed: API unreachable.</source>
+        <target>Échec de la collecte : API injoignable.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/jobs/jobs.ts</context>
+          <context context-type="linenumber">40</context>
+        </context-group>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

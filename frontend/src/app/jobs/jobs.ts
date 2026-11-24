@@ -26,13 +26,18 @@ export class Jobs implements OnInit {
     this.message.set('');
     this.jobsService.collect().subscribe({
       next: (result) => {
-        const errors = result.errors.length ? ` Errors: ${result.errors.join(', ')}` : '';
-        this.message.set(`${result.added} new offers (${result.fetched} found).${errors}`);
+        const errors = result.errors.length
+          ? $localize`:@@collectErrors: Errors: ${result.errors.join(', ')}:errorList:`
+          : '';
+        this.message.set(
+          $localize`:@@collectSummary:${result.added}:added: new offers (${result.fetched}:fetched: found).` +
+            errors,
+        );
         this.collecting.set(false);
         this.loadJobs();
       },
       error: () => {
-        this.message.set('Collection failed: API unreachable.');
+        this.message.set($localize`:@@collectFailed:Collection failed: API unreachable.`);
         this.collecting.set(false);
       },
     });

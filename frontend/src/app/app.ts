@@ -12,12 +12,15 @@ import { Jobs } from './jobs/jobs';
 export class App implements OnInit {
   private readonly healthService = inject(HealthService);
 
-  protected readonly apiStatus = signal('checking...');
+  protected readonly apiStatus = signal($localize`:@@backendStatusChecking:checking...`);
 
   ngOnInit(): void {
     this.healthService.getHealth().subscribe({
-      next: (health) => this.apiStatus.set(`API ${health.status}, database ${health.database}`),
-      error: () => this.apiStatus.set('API unreachable'),
+      next: (health) =>
+        this.apiStatus.set(
+          $localize`:@@backendStatusOk:API ${health.status}:apiStatus:, database ${health.database}:databaseStatus:`,
+        ),
+      error: () => this.apiStatus.set($localize`:@@backendStatusUnreachable:API unreachable`),
     });
   }
 }
