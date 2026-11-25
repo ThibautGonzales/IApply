@@ -72,9 +72,10 @@ Architecture decisions and the reason behind each one.
   (LinkedIn...) and its link; an LLM fills the fields (title, company, location, contract,
   salary, remote). The offer is saved with `source = "manual"` and is then handled like the
   others (scoring, cover letter, tracking).
-- **LLM scoring comes first.** A collection brings back far too many offers, most of them
-  unrelated to the search; scoring them against the profile and showing only the relevant
-  ones is what makes the app save time.
+- **LLM scoring right after the offer actions and tracking.** A collection brings back far
+  too many offers, most of them unrelated to the search; scoring them against the profile
+  and showing only the relevant ones is what makes the app save time. Actions and tracking
+  come just before because they are quick to build and useful at once.
 - **Offer actions in the list:** generate a cover letter, hide, mark as applied. A hidden or
   applied offer leaves the list.
 - **Hiding is a `hidden` flag on `JobOffer`, never a real delete**: a deleted offer would
@@ -92,10 +93,10 @@ Architecture decisions and the reason behind each one.
 ### Roadmap (one branch and one pull request each)
 
 1. `docs/updateRoadmap`: this update.
-2. `feat/userProfile`: the user's profile as plain text.
-3. `feat/offerScoring`: LLM score against the profile, only relevant offers shown.
-4. `feat/offerActions`: hide and mark as applied from the list.
-5. `feat/applicationTracking`: tracking page, statuses, automatic closing, link.
+2. `feat/offerActions`: hide and mark as applied from the list.
+3. `feat/applicationTracking`: tracking page, statuses, automatic closing, link.
+4. `feat/userProfile`: the user's profile as plain text.
+5. `feat/offerScoring`: LLM score against the profile, only relevant offers shown.
 6. `feat/manualOffer`: paste an offer, the LLM fills its fields.
 7. `feat/coverLetter`: cover letter generation.
 8. Later: search settings screen, a second job API.
