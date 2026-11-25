@@ -1,7 +1,9 @@
 # IApply
 
-IApply helps with job hunting: it collects job offers (from Jooble today), scores
-them against your profile with an LLM (planned), and later drafts cover letters.
+IApply helps with job hunting: it collects job offers from the Jooble API, lets you
+add offers found elsewhere by pasting them, and (planned) scores them against your
+profile with an LLM, drafts cover letters and tracks your applications.
+See the roadmap in [DECISIONS.md](DECISIONS.md#2026-11-25--roadmap-update).
 
 ## Stack
 

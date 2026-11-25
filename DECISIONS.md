@@ -16,7 +16,7 @@ Architecture decisions and the reason behind each one.
 - **Runtime: Docker Compose.** Frontend, backend and database start with a single
   command, with the same setup on every machine.
 
-## MVP scope (planned, not built yet)
+## MVP scope (first version, replaced on 2026-11-25, see "Roadmap update")
 
 1. A "Collect" button fetches offers from the job sources (Jooble first), only those
    published since the last collection (about once a day). Done, see below.
@@ -63,3 +63,40 @@ Architecture decisions and the reason behind each one.
 - **English is the reference list of keys**: TypeScript reports any key missing in French.
 - **Components keep raw data** (collection result, API health) and build texts in the
   template or a `computed`, so texts follow a language change.
+
+## 2026-11-25 — Roadmap update
+
+- **One job source: the Jooble API.** No scraping: it breaks whenever a site changes and
+  is not something to publish on a public repository. Another API can be added later.
+- **Offers can be added by hand.** The user pastes the text of an offer found elsewhere
+  (LinkedIn...) and its link; an LLM fills the fields (title, company, location, contract,
+  salary, remote). The offer is saved with `source = "manual"` and is then handled like the
+  others (scoring, cover letter, tracking).
+- **LLM scoring right after the offer actions and tracking.** A collection brings back far
+  too many offers, most of them unrelated to the search; scoring them against the profile
+  and showing only the relevant ones is what makes the app save time. Actions and tracking
+  come just before because they are quick to build and useful at once.
+- **Offer actions in the list:** generate a cover letter, hide, mark as applied. A hidden or
+  applied offer leaves the list.
+- **Hiding is a `hidden` flag on `JobOffer`, never a real delete**: a deleted offer would
+  come back at the next collection.
+- **Applications live in their own `Application` table**, linked to the offer (status,
+  application date, last status change, notes later). It keeps the offer and the
+  application apart, and the tracking page has its own data.
+- **Tracking page:** applied offers with their status and a link to the original posting
+  (useful before an interview). Statuses: waiting for an answer, interview, rejected,
+  accepted, closed without answer.
+- **Automatic closing:** an application with no status change for one month is considered
+  closed without answer. Checked when the applications are read, no scheduled job.
+- **Cover letters** stay in the style of the user's existing letters.
+
+### Roadmap (one branch and one pull request each)
+
+1. `docs/updateRoadmap`: this update.
+2. `feat/offerActions`: hide and mark as applied from the list.
+3. `feat/applicationTracking`: tracking page, statuses, automatic closing, link.
+4. `feat/userProfile`: the user's profile as plain text.
+5. `feat/offerScoring`: LLM score against the profile, only relevant offers shown.
+6. `feat/manualOffer`: paste an offer, the LLM fills its fields.
+7. `feat/coverLetter`: cover letter generation.
+8. Later: search settings screen, a second job API.
