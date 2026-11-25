@@ -36,3 +36,39 @@ def test_list_applications_returns_most_recent_first_with_their_offer(client, se
 
 def test_list_applications_is_empty_without_applications(client, session):
     assert client.get("/applications").json() == []
+
+
+def test_change_status_updates_the_status_and_the_last_news(client, session):
+    application = make_application(session, "1", day=20)
+
+    response = client.put(f"/applications/{application.id}/status", json={"status": "interview"})
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "interview"
+    assert response.json()["job"]["external_id"] == "1"
+    session.refresh(application)
+    assert application.last_news_at > application.applied_at
+
+
+def test_change_status_refuses_an_unknown_status(client, session):
+    application = make_application(session, "1", day=20)
+
+    response = client.put(f"/applications/{application.id}/status", json={"status": "maybe"})
+
+    assert response.status_code == 422
+
+
+def test_news_updates_the_last_news_but_keeps_the_status(client, session):
+    application = make_application(session, "1", day=20)
+
+    response = client.post(f"/applications/{application.id}/news")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "waiting"
+    session.refresh(application)
+    assert application.last_news_at > application.applied_at
+
+
+def test_unknown_application_returns_404(client, session):
+    assert client.post("/applications/999/news").status_code == 404
+    assert client.put("/applications/999/status", json={"status": "closed"}).status_code == 404

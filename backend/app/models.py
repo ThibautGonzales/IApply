@@ -69,3 +69,9 @@ class ApplicationWithJob(SQLModel):
     applied_at: datetime
     last_news_at: datetime
     job: JobOffer
+
+
+class StatusChange(SQLModel):
+    """Body of `PUT /applications/{id}/status`. An unknown status is refused by FastAPI (422)."""
+
+    status: ApplicationStatus

@@ -5,7 +5,7 @@ from sqlmodel import Session, col, select
 
 from app.collection import CollectionResult, collect_jobs
 from app.database import get_session, is_database_reachable
-from app.models import Application, ApplicationWithJob, JobOffer
+from app.models import Application, ApplicationWithJob, JobOffer, StatusChange, utc_now
 from app.tracking import close_stale_applications
 
 app = FastAPI(title="IApply API")
@@ -80,7 +80,39 @@ def list_applications(session: SessionDep) -> list[ApplicationWithJob]:
         .join(JobOffer, col(Application.job_offer_id) == col(JobOffer.id))
         .order_by(col(Application.applied_at).desc())
     )
-    return [
-        ApplicationWithJob(**application.model_dump(exclude={"job_offer_id"}), job=job)
-        for application, job in session.exec(query).all()
-    ]
+    return [with_job(application, job) for application, job in session.exec(query).all()]
+
+
+def with_job(application: Application, job: JobOffer) -> ApplicationWithJob:
+    # job_offer_id is left out: it would repeat job.id.
+    return ApplicationWithJob(**application.model_dump(exclude={"job_offer_id"}), job=job)
+
+
+def get_application_or_404(session: Session, application_id: int) -> Application:
+    application = session.get(Application, application_id)
+    if application is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+    return application
+
+
+def record_news(session: Session, application: Application) -> ApplicationWithJob:
+    """Save the application with `last_news_at` set to now, and return it with its offer."""
+    application.last_news_at = utc_now()
+    session.add(application)
+    session.commit()
+    session.refresh(application)
+    return with_job(application, get_job_or_404(session, application.job_offer_id))
+
+
+@app.put("/applications/{application_id}/status")
+def change_status(application_id: int, change: StatusChange, session: SessionDep) -> ApplicationWithJob:
+    """Set a new status. A status change is news too, so the month without news starts again."""
+    application = get_application_or_404(session, application_id)
+    application.status = change.status
+    return record_news(session, application)
+
+
+@app.post("/applications/{application_id}/news")
+def got_news(application_id: int, session: SessionDep) -> ApplicationWithJob:
+    """The "I got news" button: the status stays the same, but the month without news starts again."""
+    return record_news(session, get_application_or_404(session, application_id))
