@@ -76,3 +76,9 @@ class StatusChange(SQLModel):
     """Body of `PUT /applications/{id}/status`. An unknown status is refused by FastAPI (422)."""
 
     status: ApplicationStatus
+
+
+class DescriptionChange(SQLModel):
+    """Body of `PUT /jobs/{id}/description`: the offer text pasted by the user."""
+
+    description: str

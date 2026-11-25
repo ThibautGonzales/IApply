@@ -80,3 +80,32 @@ def test_apply_twice_keeps_a_single_application(client, session):
 
 def test_apply_to_unknown_offer_returns_404(client, session):
     assert client.post("/jobs/999/apply").status_code == 404
+
+
+def test_change_description_saves_the_pasted_text(client, session):
+    offer = make_offer("1", day=23)
+    session.add(offer)
+    session.commit()
+
+    response = client.put(f"/jobs/{offer.id}/description", json={"description": "  Full offer text\n"})
+
+    assert response.status_code == 200
+    assert response.json()["description"] == "Full offer text"
+    session.refresh(offer)
+    assert offer.description == "Full offer text"
+
+
+def test_change_description_with_an_empty_text_clears_it(client, session):
+    offer = make_offer("1", day=23)
+    offer.description = "Old text"
+    session.add(offer)
+    session.commit()
+
+    response = client.put(f"/jobs/{offer.id}/description", json={"description": "   "})
+
+    assert response.status_code == 200
+    assert response.json()["description"] is None
+
+
+def test_change_description_of_unknown_offer_returns_404(client):
+    assert client.put("/jobs/999/description", json={"description": "x"}).status_code == 404
