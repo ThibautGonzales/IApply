@@ -9,8 +9,18 @@
   }
 
   <h3>{{ i18n.t('jobs.onSite') }} ({{ onSiteJobs().length }})</h3>
-  <app-job-table class="on-site" [jobs]="onSiteJobs()" />
+  <app-job-table
+    class="on-site"
+    [jobs]="onSiteJobs()"
+    (hide)="hide($event)"
+    (apply)="apply($event)"
+  />
 
   <h3>{{ i18n.t('jobs.remote') }} ({{ remoteJobs().length }})</h3>
-  <app-job-table class="remote" [jobs]="remoteJobs()" />
+  <app-job-table
+    class="remote"
+    [jobs]="remoteJobs()"
+    (hide)="hide($event)"
+    (apply)="apply($event)"
+  />
 </section>

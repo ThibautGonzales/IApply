@@ -1,11 +1,11 @@
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Response, status
-from sqlmodel import Session, select
+from fastapi import Depends, FastAPI, HTTPException, Response, status
+from sqlmodel import Session, col, select
 
 from app.collection import CollectionResult, collect_jobs
 from app.database import get_session, is_database_reachable
-from app.models import JobOffer
+from app.models import Application, JobOffer
 
 app = FastAPI(title="IApply API")
 
@@ -29,5 +29,43 @@ def collect(session: SessionDep) -> CollectionResult:
 
 @app.get("/jobs")
 def list_jobs(session: SessionDep) -> list[JobOffer]:
-    """All saved offers, most recent first."""
-    return list(session.exec(select(JobOffer).order_by(JobOffer.published_at.desc())).all())
+    """The offers still to look at (neither hidden nor applied to), most recent first."""
+    applied_ids = select(Application.job_offer_id)
+    query = (
+        select(JobOffer)
+        .where(col(JobOffer.hidden).is_(False))
+        .where(col(JobOffer.id).not_in(applied_ids))
+        .order_by(col(JobOffer.published_at).desc())
+    )
+    return list(session.exec(query).all())
+
+
+def get_job_or_404(session: Session, job_id: int) -> JobOffer:
+    job = session.get(JobOffer, job_id)
+    if job is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job offer not found")
+    return job
+
+
+@app.post("/jobs/{job_id}/hide", status_code=status.HTTP_204_NO_CONTENT)
+def hide_job(job_id: int, session: SessionDep) -> None:
+    """Remove an offer from the list. It stays in the database so a collection does not bring it back."""
+    job = get_job_or_404(session, job_id)
+    job.hidden = True
+    session.add(job)
+    session.commit()
+
+
+
+@app.post("/jobs/{job_id}/apply")
+def apply_to_job(job_id: int, session: SessionDep) -> Application:
+    """Record that the user applied to an offer: it leaves the list and goes to the tracking."""
+    job = get_job_or_404(session, job_id)
+    existing = session.exec(select(Application).where(Application.job_offer_id == job.id)).first()
+    if existing is not None:
+        return existing  # a double click must not fail nor create a second application
+    application = Application(job_offer_id=job.id)
+    session.add(application)
+    session.commit()
+    session.refresh(application)
+    return application

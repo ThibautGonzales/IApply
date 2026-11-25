@@ -58,6 +58,19 @@ export class Jobs implements OnInit {
     });
   }
 
+  protected hide(job: JobOffer): void {
+    this.jobsService.hide(job.id).subscribe(() => this.removeFromList(job));
+  }
+
+  protected apply(job: JobOffer): void {
+    this.jobsService.apply(job.id).subscribe(() => this.removeFromList(job));
+  }
+
+  // Removed locally once the API has answered: no need to reload the whole list.
+  private removeFromList(job: JobOffer): void {
+    this.jobs.update((jobs) => jobs.filter((other) => other.id !== job.id));
+  }
+
   private loadJobs(): void {
     this.jobsService.getJobs().subscribe((jobs) => this.jobs.set(jobs));
   }

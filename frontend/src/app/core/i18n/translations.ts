@@ -25,6 +25,9 @@ const en = {
   'table.company': 'Company',
   'table.location': 'Location',
   'table.contract': 'Contract',
+  'table.actions': 'Actions',
+  'actions.apply': 'I applied',
+  'actions.hide': 'Hide',
 };
 
 export type TranslationKey = keyof typeof en;
@@ -53,5 +56,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     'table.company': 'Entreprise',
     'table.location': 'Lieu',
     'table.contract': 'Contrat',
+    'table.actions': 'Actions',
+    'actions.apply': "J'ai postulé",
+    'actions.hide': 'Masquer',
   },
 };
