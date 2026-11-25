@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from enum import StrEnum
 
 from sqlalchemy import DateTime, Text, UniqueConstraint, false
 from sqlmodel import Field, SQLModel
@@ -35,6 +36,16 @@ class JobOffer(SQLModel, table=True):
     collected_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
 
 
+class ApplicationStatus(StrEnum):
+    """Where an application stands. Stored as plain text in `Application.status`."""
+
+    WAITING = "waiting"  # waiting for an answer
+    INTERVIEW = "interview"
+    REJECTED = "rejected"
+    ACCEPTED = "accepted"
+    CLOSED = "closed"  # closed without answer
+
+
 class Application(SQLModel, table=True):
     """An application sent for an offer. Kept apart from `JobOffer` so the tracking has its own data."""
 
@@ -43,7 +54,7 @@ class Application(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     # unique: one application per offer.
     job_offer_id: int = Field(foreign_key="job_offer.id", unique=True)
-    status: str = Field(default="waiting", max_length=50)  # the other statuses come with the tracking page
+    status: str = Field(default=ApplicationStatus.WAITING, max_length=50)
     applied_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
     # Last time something happened (status change or "I got news"): used to close an
     # application after a month without news.

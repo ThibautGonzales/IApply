@@ -6,6 +6,7 @@ from sqlmodel import Session, col, select
 from app.collection import CollectionResult, collect_jobs
 from app.database import get_session, is_database_reachable
 from app.models import Application, ApplicationWithJob, JobOffer
+from app.tracking import close_stale_applications
 
 app = FastAPI(title="IApply API")
 
@@ -73,6 +74,7 @@ def apply_to_job(job_id: int, session: SessionDep) -> Application:
 @app.get("/applications")
 def list_applications(session: SessionDep) -> list[ApplicationWithJob]:
     """The applications with their offer, most recent first, for the tracking page."""
+    close_stale_applications(session)
     query = (
         select(Application, JobOffer)
         .join(JobOffer, col(Application.job_offer_id) == col(JobOffer.id))
