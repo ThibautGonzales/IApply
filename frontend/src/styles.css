@@ -1,1 +1,20 @@
-/* You can add global styles to this file, and also import other style files */
+/* Shared by every table of the app (offers, applications). */
+table {
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th,
+td {
+  border-bottom: 1px solid #ddd;
+  padding: 0.4rem 0.8rem;
+  text-align: left;
+}
+
+td.actions {
+  white-space: nowrap;
+}
+
+td.actions button + button {
+  margin-left: 0.4rem;
+}

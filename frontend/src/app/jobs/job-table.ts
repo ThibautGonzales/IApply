@@ -7,7 +7,6 @@ import { JobOffer } from './jobs.service';
 @Component({
   imports: [DatePipe],
   selector: 'app-job-table',
-  styleUrl: './job-table.css',
   templateUrl: './job-table.html',
 })
 export class JobTable {
