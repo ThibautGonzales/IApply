@@ -1,0 +1,76 @@
+<section>
+  <h2>{{ i18n.t('applications.title') }} ({{ applications().length }})</h2>
+
+  @if (applications().length) {
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('applications.appliedAt') }}</th>
+          <th>{{ i18n.t('table.title') }}</th>
+          <th>{{ i18n.t('table.company') }}</th>
+          <th>{{ i18n.t('applications.status') }}</th>
+          <th>{{ i18n.t('applications.lastNews') }}</th>
+          <th>{{ i18n.t('table.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (application of applications(); track application.id) {
+          <tr>
+            <td>{{ application.applied_at | date: 'dd/MM/yyyy' }}</td>
+            <td>
+              <a [href]="application.job.url" target="_blank" rel="noopener">
+                {{ application.job.title }}
+              </a>
+            </td>
+            <td>{{ application.job.company }}</td>
+            <td>
+              <select (change)="changeStatus(application, $any($event.target).value)">
+                @for (status of statuses; track status) {
+                  <option [value]="status" [selected]="status === application.status">
+                    {{ i18n.t(`status.${status}`) }}
+                  </option>
+                }
+              </select>
+            </td>
+            <td>{{ application.last_news_at | date: 'dd/MM/yyyy' }}</td>
+            <td class="actions">
+              <button type="button" class="news" (click)="recordNews(application)">
+                {{ i18n.t('applications.gotNews') }}
+              </button>
+              <button type="button" class="view" (click)="toggleOffer(application)">
+                {{
+                  openedId() === application.id
+                    ? i18n.t('applications.hideOffer')
+                    : i18n.t('applications.viewOffer')
+                }}
+              </button>
+            </td>
+          </tr>
+          @if (openedId() === application.id) {
+            <tr class="offer">
+              <td colspan="6">
+                <p>
+                  {{ application.job.location }}
+                  @if (application.job.contract_type) {
+                    · {{ application.job.contract_type }}
+                  }
+                  @if (application.job.salary) {
+                    · {{ application.job.salary }}
+                  }
+                </p>
+                <p class="description">
+                  {{ application.job.description || i18n.t('applications.noDescription') }}
+                </p>
+                <a [href]="application.job.url" target="_blank" rel="noopener">
+                  {{ i18n.t('applications.originalPosting') }}
+                </a>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  } @else {
+    <p>{{ i18n.t('applications.none') }}</p>
+  }
+</section>

@@ -96,6 +96,25 @@ Architecture decisions and the reason behind each one.
   enforced by a unique `job_offer_id`), so a double click cannot fail.
 - **No undo button for now**: added if the need shows up.
 
+## 2026-11-25 — Application tracking
+
+- **Closed automatically after 30 days without news**, only while the status is "waiting" or
+  "interview". Rejected, accepted and closed are final and never touched. The check is one
+  `UPDATE` run by `GET /applications` (`app/tracking.py`).
+- **`last_news_at` instead of `status_changed_at`**: a status change is news, and so is the
+  "I got news" button (`POST /applications/{id}/news`), which keeps the status. Both restart
+  the month. The page shows this date as "Last news".
+- **`GET /applications` returns each application with its offer nested** (`ApplicationWithJob`),
+  in one request. The action routes return the same shape, so the page replaces one row
+  instead of reloading the list.
+- **Statuses are a `StrEnum` (`ApplicationStatus`)**: stored as plain text, validated by
+  FastAPI on `PUT /applications/{id}/status` (422 for an unknown status).
+- **Two pages with the Angular router**: `/` for the offers, `/applications` for the tracking,
+  with a menu in the header. `jobs.ts` and `job-table.ts` keep their logic.
+- **"View offer" unfolds the saved details under the row** (location, contract, salary,
+  description) with a link to the original posting. Jooble only gives a snippet of the
+  description; getting the full text is a later topic.
+
 ### Roadmap (one branch and one pull request each)
 
 1. `docs/updateRoadmap`: this update.
