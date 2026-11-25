@@ -6,6 +6,8 @@ export const DEFAULT_LANGUAGE: Language = 'en';
 /** English texts: the reference list of keys. */
 const en = {
   'language.label': 'Language',
+  'nav.jobs': 'Offers',
+  'nav.applications': 'Tracking',
   'backend.label': 'Backend status:',
   'backend.checking': 'checking...',
   'backend.database': 'database',
@@ -28,6 +30,7 @@ const en = {
   'table.actions': 'Actions',
   'actions.apply': 'I applied',
   'actions.hide': 'Hide',
+  'applications.title': 'My applications',
 };
 
 export type TranslationKey = keyof typeof en;
@@ -37,6 +40,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
   en,
   fr: {
     'language.label': 'Langue',
+    'nav.jobs': 'Offres',
+    'nav.applications': 'Suivi',
     'backend.label': 'État du backend :',
     'backend.checking': 'vérification...',
     'backend.database': 'base de données',
@@ -59,5 +64,6 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     'table.actions': 'Actions',
     'actions.apply': "J'ai postulé",
     'actions.hide': 'Masquer',
+    'applications.title': 'Mes candidatures',
   },
 };

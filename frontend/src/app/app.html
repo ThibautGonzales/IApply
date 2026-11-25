@@ -17,6 +17,12 @@
       }
     </div>
   </header>
+  <nav>
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      {{ i18n.t('nav.jobs') }}
+    </a>
+    <a routerLink="/applications" routerLinkActive="active">{{ i18n.t('nav.applications') }}</a>
+  </nav>
   <p>
     {{ i18n.t('backend.label') }}
     <strong>
@@ -29,7 +35,5 @@
       }
     </strong>
   </p>
-  <app-jobs />
+  <router-outlet />
 </main>
-
-<router-outlet />

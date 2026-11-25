@@ -1,7 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { App } from './app';
+import { routes } from './app.routes';
 import { I18nService } from './core/i18n/i18n.service';
 
 describe('App', () => {
@@ -11,7 +13,7 @@ describe('App', () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter(routes)],
     }).compileComponents();
     httpTesting = TestBed.inject(HttpTestingController);
   });
@@ -49,8 +51,17 @@ describe('App', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('strong')?.textContent?.trim()).toBe('API injoignable');
-    expect(compiled.querySelector('h2')?.textContent).toBe("Offres d'emploi");
+    expect(compiled.querySelector('nav a')?.textContent?.trim()).toBe('Offres');
     expect(document.documentElement.lang).toBe('fr');
+  });
+
+  it('shows a menu with the offers and the tracking pages', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const links = (fixture.nativeElement as HTMLElement).querySelectorAll('nav a');
+    expect([...links].map((link) => link.getAttribute('href'))).toEqual(['/', '/applications']);
   });
 
   it('switches the language with the EN / FR buttons, starting from the saved one', async () => {
