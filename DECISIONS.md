@@ -115,6 +115,17 @@ Architecture decisions and the reason behind each one.
   description) with a link to the original posting. Jooble only gives a snippet of the
   description; getting the full text is a later topic (see "Full offer text" below).
 
+### Roadmap (one branch and one pull request each)
+
+1. `docs/updateRoadmap`: this update.
+2. `feat/offerActions`: hide and mark as applied from the list.
+3. `feat/applicationTracking`: tracking page, statuses, automatic closing, link.
+4. `feat/userProfile`: the user's profile as plain text.
+5. `feat/offerScoring`: LLM score against the profile, only relevant offers shown.
+6. `feat/manualOffer`: paste an offer, the LLM fills its fields.
+7. `feat/coverLetter`: cover letter generation.
+8. Later: search settings screen, a second job API.
+
 ## 2026-11-25 — Full offer text
 
 - **The Jooble snippet is no longer saved.** It is cut at about 290 characters (275 on average
@@ -128,14 +139,3 @@ Architecture decisions and the reason behind each one.
   the text is needed before applying (cover letter) and stays useful after (interview).
 - **LLM scoring works with the title, company, location and contract** of an offer, plus its
   description when the user has pasted one.
-
-### Roadmap (one branch and one pull request each)
-
-1. `docs/updateRoadmap`: this update.
-2. `feat/offerActions`: hide and mark as applied from the list.
-3. `feat/applicationTracking`: tracking page, statuses, automatic closing, link.
-4. `feat/userProfile`: the user's profile as plain text.
-5. `feat/offerScoring`: LLM score against the profile, only relevant offers shown.
-6. `feat/manualOffer`: paste an offer, the LLM fills its fields.
-7. `feat/coverLetter`: cover letter generation.
-8. Later: search settings screen, a second job API.
