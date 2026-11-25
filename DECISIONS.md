@@ -90,6 +90,12 @@ Architecture decisions and the reason behind each one.
   closed without answer. Checked when the applications are read, no scheduled job.
 - **Cover letters** stay in the style of the user's existing letters.
 
+- **One route per action**: `POST /jobs/{id}/hide` and `POST /jobs/{id}/apply`, rather than a
+  generic `PATCH /jobs/{id}`. The tracking page will get its own `/applications` routes.
+- **Applying is idempotent**: applying twice returns the existing application (one per offer,
+  enforced by a unique `job_offer_id`), so a double click cannot fail.
+- **No undo button for now**: added if the need shows up.
+
 ### Roadmap (one branch and one pull request each)
 
 1. `docs/updateRoadmap`: this update.
