@@ -45,5 +45,16 @@ class Application(SQLModel, table=True):
     job_offer_id: int = Field(foreign_key="job_offer.id", unique=True)
     status: str = Field(default="waiting", max_length=50)  # the other statuses come with the tracking page
     applied_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
-    # Used to close an application after a month without news.
-    status_changed_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
+    # Last time something happened (status change or "I got news"): used to close an
+    # application after a month without news.
+    last_news_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
+
+
+class ApplicationWithJob(SQLModel):
+    """What the tracking page receives: an application and its offer, in one object."""
+
+    id: int
+    status: str
+    applied_at: datetime
+    last_news_at: datetime
+    job: JobOffer

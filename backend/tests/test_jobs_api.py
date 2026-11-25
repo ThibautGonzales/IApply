@@ -1,21 +1,9 @@
 from datetime import UTC, datetime
 
-import pytest
-from fastapi.testclient import TestClient
 from sqlmodel import select
 
 from app import collection
-from app.database import get_session
-from app.main import app
 from app.models import Application, JobOffer
-
-
-@pytest.fixture
-def client(session):
-    """API client whose routes use the test database."""
-    app.dependency_overrides[get_session] = lambda: session
-    yield TestClient(app)
-    app.dependency_overrides.clear()
 
 
 def make_offer(external_id: str, day: int) -> JobOffer:
