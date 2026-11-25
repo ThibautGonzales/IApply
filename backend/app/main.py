@@ -5,7 +5,14 @@ from sqlmodel import Session, col, select
 
 from app.collection import CollectionResult, collect_jobs
 from app.database import get_session, is_database_reachable
-from app.models import Application, ApplicationWithJob, JobOffer, StatusChange, utc_now
+from app.models import (
+    Application,
+    ApplicationWithJob,
+    DescriptionChange,
+    JobOffer,
+    StatusChange,
+    utc_now,
+)
 from app.tracking import close_stale_applications
 
 app = FastAPI(title="IApply API")
@@ -69,6 +76,17 @@ def apply_to_job(job_id: int, session: SessionDep) -> Application:
     session.commit()
     session.refresh(application)
     return application
+
+
+@app.put("/jobs/{job_id}/description")
+def change_description(job_id: int, change: DescriptionChange, session: SessionDep) -> JobOffer:
+    """Save the full offer text pasted by the user. An empty text clears it."""
+    job = get_job_or_404(session, job_id)
+    job.description = change.description.strip() or None
+    session.add(job)
+    session.commit()
+    session.refresh(job)
+    return job
 
 
 @app.get("/applications")

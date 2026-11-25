@@ -43,6 +43,10 @@ export class JobsService {
     return this.http.post<void>(`/api/jobs/${jobId}/hide`, null);
   }
 
+  changeDescription(jobId: number, description: string): Observable<JobOffer> {
+    return this.http.put<JobOffer>(`/api/jobs/${jobId}/description`, { description });
+  }
+
   // Returns the created application; the tracking page will use it.
   apply(jobId: number): Observable<unknown> {
     return this.http.post(`/api/jobs/${jobId}/apply`, null);

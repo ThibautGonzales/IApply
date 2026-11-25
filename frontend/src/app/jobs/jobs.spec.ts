@@ -103,4 +103,51 @@ describe('Jobs', () => {
     expect(compiled.querySelectorAll('.on-site tbody tr').length).toBe(1);
     expect(compiled.querySelectorAll('.remote tbody tr').length).toBe(1);
   });
+
+  it('pastes the full text of an offer before applying', async () => {
+    const fixture = TestBed.createComponent(Jobs);
+    fixture.detectChanges();
+    httpTesting.expectOne('/api/jobs').flush([offer]);
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('tbody .view')?.click();
+    await fixture.whenStable();
+    expect(compiled.querySelector('.offer .description')?.textContent).toContain(
+      'No description yet',
+    );
+    expect(compiled.querySelector('.offer .edit')?.textContent?.trim()).toBe('Paste the offer');
+
+    compiled.querySelector<HTMLButtonElement>('.offer .edit')?.click();
+    await fixture.whenStable();
+    compiled.querySelector('textarea')!.value = 'The full offer.';
+    compiled.querySelector<HTMLButtonElement>('.offer .save')?.click();
+    httpTesting
+      .expectOne({ method: 'PUT', url: '/api/jobs/1/description' })
+      .flush({ ...offer, description: 'The full offer.' });
+    await fixture.whenStable();
+
+    expect(compiled.querySelector('.offer .description')?.textContent?.trim()).toBe(
+      'The full offer.',
+    );
+    expect(compiled.querySelector('.offer .edit')?.textContent?.trim()).toBe('Edit the offer');
+  });
+
+  it('cancels the edit without calling the API', async () => {
+    const fixture = TestBed.createComponent(Jobs);
+    fixture.detectChanges();
+    httpTesting.expectOne('/api/jobs').flush([offer]);
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('tbody .view')?.click();
+    await fixture.whenStable();
+    compiled.querySelector<HTMLButtonElement>('.offer .edit')?.click();
+    await fixture.whenStable();
+    compiled.querySelector<HTMLButtonElement>('.offer .cancel')?.click();
+    await fixture.whenStable();
+
+    expect(compiled.querySelector('textarea')).toBeNull();
+    httpTesting.verify();
+  });
 });

@@ -38,32 +38,17 @@
                 {{ i18n.t('applications.gotNews') }}
               </button>
               <button type="button" class="view" (click)="toggleOffer(application)">
-                {{
-                  openedId() === application.id
-                    ? i18n.t('applications.hideOffer')
-                    : i18n.t('applications.viewOffer')
-                }}
+                {{ openedId() === application.id ? i18n.t('offer.close') : i18n.t('offer.view') }}
               </button>
             </td>
           </tr>
           @if (openedId() === application.id) {
             <tr class="offer">
               <td colspan="6">
-                <p>
-                  {{ application.job.location }}
-                  @if (application.job.contract_type) {
-                    · {{ application.job.contract_type }}
-                  }
-                  @if (application.job.salary) {
-                    · {{ application.job.salary }}
-                  }
-                </p>
-                <p class="description">
-                  {{ application.job.description || i18n.t('applications.noDescription') }}
-                </p>
-                <a [href]="application.job.url" target="_blank" rel="noopener">
-                  {{ i18n.t('applications.originalPosting') }}
-                </a>
+                <app-offer-details
+                  [job]="application.job"
+                  (saved)="replaceJob(application, $event)"
+                />
               </td>
             </tr>
           }

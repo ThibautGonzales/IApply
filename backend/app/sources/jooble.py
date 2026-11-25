@@ -131,7 +131,8 @@ def to_job_offer(job: dict, from_remote_search: bool = False) -> JobOffer:
         location=location,
         salary=job.get("salary") or None,
         contract_type=job.get("type") or None,
-        description=_clean(job.get("snippet") or "") or None,
+        # No description: Jooble only gives a ~290 character snippet, too short to be useful.
+        # The user pastes the full offer later (PUT /jobs/{id}/description).
         url=job["link"],
         published_at=_parse_date(job["updated"]),
         # A local search can also return remote offers: Jooble then gives "Télétravail" as location.

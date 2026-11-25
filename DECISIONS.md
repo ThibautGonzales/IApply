@@ -113,7 +113,7 @@ Architecture decisions and the reason behind each one.
   with a menu in the header. `jobs.ts` and `job-table.ts` keep their logic.
 - **"View offer" unfolds the saved details under the row** (location, contract, salary,
   description) with a link to the original posting. Jooble only gives a snippet of the
-  description; getting the full text is a later topic.
+  description; getting the full text is a later topic (see "Full offer text" below).
 
 ### Roadmap (one branch and one pull request each)
 
@@ -125,3 +125,17 @@ Architecture decisions and the reason behind each one.
 6. `feat/manualOffer`: paste an offer, the LLM fills its fields.
 7. `feat/coverLetter`: cover letter generation.
 8. Later: search settings screen, a second job API.
+
+## 2026-11-25 — Full offer text
+
+- **The Jooble snippet is no longer saved.** It is cut at about 290 characters (275 on average
+  in our database), too short to judge an offer. A migration emptied the snippets already saved.
+- **No automatic fetch of the offer page.** The Jooble offer pages are behind a Cloudflare
+  anti-bot check: the backend gets an HTTP 403 challenge page, not the offer. Getting around it
+  would mean defeating that check, and it would break at each change on their side.
+- **`description` now only holds the full text pasted by the user**, from the original posting
+  opened in the browser. `PUT /jobs/{id}/description` saves it; an empty text clears it.
+- **Paste from both pages**, in the shared `OfferDetails` component unfolded by "View offer":
+  the text is needed before applying (cover letter) and stays useful after (interview).
+- **LLM scoring works with the title, company, location and contract** of an offer, plus its
+  description when the user has pasted one.

@@ -1,0 +1,19 @@
+.description {
+  max-width: 60rem;
+  white-space: pre-line; /* keeps the line breaks of the pasted text */
+}
+
+textarea {
+  box-sizing: border-box;
+  display: block;
+  max-width: 60rem;
+  width: 100%;
+}
+
+.buttons {
+  margin-top: 0.4rem;
+}
+
+.buttons button + button {
+  margin-left: 0.4rem;
+}

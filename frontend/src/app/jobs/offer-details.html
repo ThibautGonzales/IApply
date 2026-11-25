@@ -1,0 +1,35 @@
+<p>
+  {{ job().location }}
+  @if (job().contract_type) {
+    · {{ job().contract_type }}
+  }
+  @if (job().salary) {
+    · {{ job().salary }}
+  }
+</p>
+
+@if (editing()) {
+  <textarea
+    #text
+    rows="15"
+    [value]="job().description ?? ''"
+    [placeholder]="i18n.t('offer.placeholder')"
+  ></textarea>
+  <div class="buttons">
+    <button type="button" class="save" (click)="save(text.value)" [disabled]="saving()">
+      {{ i18n.t('offer.save') }}
+    </button>
+    <button type="button" class="cancel" (click)="editing.set(false)">
+      {{ i18n.t('offer.cancel') }}
+    </button>
+  </div>
+} @else {
+  <p class="description">{{ job().description || i18n.t('offer.noDescription') }}</p>
+  <button type="button" class="edit" (click)="editing.set(true)">
+    {{ job().description ? i18n.t('offer.edit') : i18n.t('offer.paste') }}
+  </button>
+}
+
+<p>
+  <a [href]="job().url" target="_blank" rel="noopener">{{ i18n.t('offer.originalPosting') }}</a>
+</p>
