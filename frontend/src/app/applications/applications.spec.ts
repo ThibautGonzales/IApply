@@ -90,10 +90,33 @@ describe('Applications', () => {
     expect(compiled.querySelector('.offer .description')?.textContent?.trim()).toBe(
       'Angular and Python.',
     );
+    expect(compiled.querySelector('.offer a')?.getAttribute('href')).toBe(
+      'https://fr.jooble.org/desc/42',
+    );
 
     compiled.querySelector<HTMLButtonElement>('.view')?.click();
     await fixture.whenStable();
     expect(compiled.querySelector('.offer')).toBeNull();
+  });
+
+  it('saves a pasted offer text and shows it', async () => {
+    const { fixture, compiled } = await render([application]);
+    compiled.querySelector<HTMLButtonElement>('.view')?.click();
+    await fixture.whenStable();
+
+    compiled.querySelector<HTMLButtonElement>('.offer .edit')?.click();
+    await fixture.whenStable();
+    compiled.querySelector('textarea')!.value = 'The full offer.';
+    compiled.querySelector<HTMLButtonElement>('.offer .save')?.click();
+    const request = httpTesting.expectOne({ method: 'PUT', url: '/api/jobs/7/description' });
+    expect(request.request.body).toEqual({ description: 'The full offer.' });
+    request.flush({ ...application.job, description: 'The full offer.' });
+    await fixture.whenStable();
+
+    expect(compiled.querySelector('textarea')).toBeNull();
+    expect(compiled.querySelector('.offer .description')?.textContent?.trim()).toBe(
+      'The full offer.',
+    );
   });
 
   it('says when there is no application yet', async () => {

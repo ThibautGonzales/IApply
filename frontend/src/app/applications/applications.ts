@@ -1,6 +1,8 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { I18nService } from '../core/i18n/i18n.service';
+import { JobOffer } from '../jobs/jobs.service';
+import { OfferDetails } from '../jobs/offer-details';
 import {
   APPLICATION_STATUSES,
   Application,
@@ -10,9 +12,8 @@ import {
 
 /** Tracking page: the offers the user applied to, with their status. */
 @Component({
-  imports: [DatePipe],
+  imports: [DatePipe, OfferDetails],
   selector: 'app-applications',
-  styleUrl: './applications.css',
   templateUrl: './applications.html',
 })
 export class Applications implements OnInit {
@@ -44,6 +45,10 @@ export class Applications implements OnInit {
 
   protected toggleOffer(application: Application): void {
     this.openedId.update((id) => (id === application.id ? null : application.id));
+  }
+
+  protected replaceJob(application: Application, job: JobOffer): void {
+    this.replace({ ...application, job });
   }
 
   // The API returns the updated application: only its row changes, no reload.

@@ -66,6 +66,11 @@ export class Jobs implements OnInit {
     this.jobsService.apply(job.id).subscribe(() => this.removeFromList(job));
   }
 
+  // The saved offer comes back from the API: only its row changes.
+  protected replace(updated: JobOffer): void {
+    this.jobs.update((jobs) => jobs.map((job) => (job.id === updated.id ? updated : job)));
+  }
+
   // Removed locally once the API has answered: no need to reload the whole list.
   private removeFromList(job: JobOffer): void {
     this.jobs.update((jobs) => jobs.filter((other) => other.id !== job.id));

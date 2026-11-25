@@ -18,3 +18,8 @@ td.actions {
 td.actions button + button {
   margin-left: 0.4rem;
 }
+
+/* Row unfolded by "View offer" under an offer. */
+tr.offer td {
+  background: #f6f6f6;
+}
