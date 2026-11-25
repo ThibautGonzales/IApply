@@ -5,7 +5,7 @@ from sqlmodel import Session, col, select
 
 from app.collection import CollectionResult, collect_jobs
 from app.database import get_session, is_database_reachable
-from app.models import JobOffer
+from app.models import Application, JobOffer
 
 app = FastAPI(title="IApply API")
 
@@ -29,10 +29,12 @@ def collect(session: SessionDep) -> CollectionResult:
 
 @app.get("/jobs")
 def list_jobs(session: SessionDep) -> list[JobOffer]:
-    """The offers still to look at (not hidden), most recent first."""
+    """The offers still to look at (neither hidden nor applied to), most recent first."""
+    applied_ids = select(Application.job_offer_id)
     query = (
         select(JobOffer)
         .where(col(JobOffer.hidden).is_(False))
+        .where(col(JobOffer.id).not_in(applied_ids))
         .order_by(col(JobOffer.published_at).desc())
     )
     return list(session.exec(query).all())
@@ -52,3 +54,18 @@ def hide_job(job_id: int, session: SessionDep) -> None:
     job.hidden = True
     session.add(job)
     session.commit()
+
+
+
+@app.post("/jobs/{job_id}/apply")
+def apply_to_job(job_id: int, session: SessionDep) -> Application:
+    """Record that the user applied to an offer: it leaves the list and goes to the tracking."""
+    job = get_job_or_404(session, job_id)
+    existing = session.exec(select(Application).where(Application.job_offer_id == job.id)).first()
+    if existing is not None:
+        return existing  # a double click must not fail nor create a second application
+    application = Application(job_offer_id=job.id)
+    session.add(application)
+    session.commit()
+    session.refresh(application)
+    return application

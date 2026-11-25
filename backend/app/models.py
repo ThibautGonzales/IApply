@@ -33,3 +33,17 @@ class JobOffer(SQLModel, table=True):
     hidden: bool = Field(default=False, sa_column_kwargs={"server_default": false()})
     published_at: datetime = Field(sa_type=DateTime(timezone=True), index=True)
     collected_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
+
+
+class Application(SQLModel, table=True):
+    """An application sent for an offer. Kept apart from `JobOffer` so the tracking has its own data."""
+
+    __tablename__ = "application"
+
+    id: int | None = Field(default=None, primary_key=True)
+    # unique: one application per offer.
+    job_offer_id: int = Field(foreign_key="job_offer.id", unique=True)
+    status: str = Field(default="waiting", max_length=50)  # the other statuses come with the tracking page
+    applied_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
+    # Used to close an application after a month without news.
+    status_changed_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
