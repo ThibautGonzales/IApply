@@ -38,4 +38,13 @@ export class JobsService {
   collect(): Observable<CollectionResult> {
     return this.http.post<CollectionResult>('/api/jobs/collect', null);
   }
+
+  hide(jobId: number): Observable<void> {
+    return this.http.post<void>(`/api/jobs/${jobId}/hide`, null);
+  }
+
+  // Returns the created application; the tracking page will use it.
+  apply(jobId: number): Observable<unknown> {
+    return this.http.post(`/api/jobs/${jobId}/apply`, null);
+  }
 }

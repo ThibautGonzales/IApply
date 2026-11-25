@@ -7,6 +7,7 @@
         <th>{{ i18n.t('table.company') }}</th>
         <th>{{ i18n.t('table.location') }}</th>
         <th>{{ i18n.t('table.contract') }}</th>
+        <th>{{ i18n.t('table.actions') }}</th>
       </tr>
     </thead>
     <tbody>
@@ -19,6 +20,14 @@
           <td>{{ job.company }}</td>
           <td>{{ job.location }}</td>
           <td>{{ job.contract_type }}</td>
+          <td class="actions">
+            <button type="button" class="apply" (click)="apply.emit(job)">
+              {{ i18n.t('actions.apply') }}
+            </button>
+            <button type="button" class="hide" (click)="hide.emit(job)">
+              {{ i18n.t('actions.hide') }}
+            </button>
+          </td>
         </tr>
       }
     </tbody>

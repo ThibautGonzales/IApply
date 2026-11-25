@@ -60,6 +60,36 @@ describe('Jobs', () => {
     expect(compiled.querySelectorAll('tbody tr').length).toBe(1);
   });
 
+  it('hides an offer and removes it from the list', async () => {
+    const fixture = TestBed.createComponent(Jobs);
+    fixture.detectChanges();
+    httpTesting.expectOne('/api/jobs').flush([offer]);
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('tbody .hide')?.click();
+    httpTesting.expectOne({ method: 'POST', url: '/api/jobs/1/hide' }).flush(null);
+    await fixture.whenStable();
+
+    expect(compiled.querySelectorAll('tbody tr').length).toBe(0);
+  });
+
+  it('marks an offer as applied and removes it from the list', async () => {
+    const fixture = TestBed.createComponent(Jobs);
+    fixture.detectChanges();
+    httpTesting.expectOne('/api/jobs').flush([offer]);
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    compiled.querySelector<HTMLButtonElement>('tbody .apply')?.click();
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/jobs/1/apply' })
+      .flush({ id: 1, job_offer_id: 1, status: 'waiting' });
+    await fixture.whenStable();
+
+    expect(compiled.querySelectorAll('tbody tr').length).toBe(0);
+  });
+
   it('shows remote offers in their own table', async () => {
     const fixture = TestBed.createComponent(Jobs);
     fixture.detectChanges();

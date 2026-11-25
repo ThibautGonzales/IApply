@@ -9,3 +9,11 @@ td {
   padding: 0.4rem 0.8rem;
   text-align: left;
 }
+
+.actions {
+  white-space: nowrap;
+}
+
+.actions button + button {
+  margin-left: 0.4rem;
+}
