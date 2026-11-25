@@ -49,7 +49,7 @@ def test_to_job_offer_converts_and_cleans_a_jooble_result():
     assert offer.source == "jooble"
     assert offer.external_id == "42"
     assert offer.title == "Développeur full stack"
-    assert offer.description == "Vous rejoindrez une équipe..."
+    assert offer.description is None  # the snippet is not kept
     assert offer.location == "Saint-Jacques-de-la-Lande & co"
     assert offer.salary is None  # empty string from Jooble
     assert offer.contract_type == "CDI"

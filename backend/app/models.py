@@ -25,6 +25,7 @@ class JobOffer(SQLModel, table=True):
     location: str | None = Field(default=None, max_length=200)
     salary: str | None = Field(default=None, max_length=200)  # free text, as given by the source
     contract_type: str | None = Field(default=None, max_length=100)
+    # The full offer text, pasted by the user. Empty until then: the sources don't give it.
     description: str | None = Field(default=None, sa_type=Text)
     url: str = Field(sa_type=Text)  # direct link to the original posting
     # True for a full remote offer. server_default fills the rows saved before this column existed.
