@@ -28,5 +28,8 @@ class JobOffer(SQLModel, table=True):
     url: str = Field(sa_type=Text)  # direct link to the original posting
     # True for a full remote offer. server_default fills the rows saved before this column existed.
     remote: bool = Field(default=False, sa_column_kwargs={"server_default": false()})
+    # Hidden offers leave the list. A flag, not a delete: a deleted offer would come back
+    # at the next collection.
+    hidden: bool = Field(default=False, sa_column_kwargs={"server_default": false()})
     published_at: datetime = Field(sa_type=DateTime(timezone=True), index=True)
     collected_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
