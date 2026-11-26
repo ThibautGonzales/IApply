@@ -24,6 +24,15 @@ cd backend
 python -m pytest
 ```
 
+Without Python installed, run them inside the backend image (from the repository root).
+Postgres is not started and your database is never touched; the tests folder is mounted
+because the image leaves it out. In Git Bash, `MSYS_NO_PATHCONV=1` stops it from turning
+`/app/tests` into a Windows path.
+
+```bash
+MSYS_NO_PATHCONV=1 docker compose run --rm --build --no-deps -e DATABASE_URL=sqlite:// -v ./backend/tests:/app/tests backend python -m pytest
+```
+
 ## Database migrations
 
 The schema is managed by Alembic (`alembic.ini`, `migrations/`). In Docker, the
