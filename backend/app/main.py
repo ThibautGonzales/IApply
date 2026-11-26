@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Response, status
-from sqlmodel import Session, col, select
+from sqlmodel import Session, col, or_, select
 
 from app.collection import CollectionResult, collect_jobs
 from app.database import get_session, is_database_reachable
@@ -52,13 +52,19 @@ def collect(session: SessionDep) -> CollectionResult:
 
 @app.get("/jobs")
 def list_jobs(session: SessionDep) -> list[JobOffer]:
-    """The offers still to look at (neither hidden nor applied to), most recent first."""
+    """The offers still to look at (neither hidden nor applied to), most interesting first.
+
+    Offers scored under the profile threshold are left out. Offers not scored yet come first,
+    so the user sees them; then the highest scores, then the most recent.
+    """
     applied_ids = select(Application.job_offer_id)
+    min_score = get_the_profile(session).min_score
     query = (
         select(JobOffer)
         .where(col(JobOffer.hidden).is_(False))
         .where(col(JobOffer.id).not_in(applied_ids))
-        .order_by(col(JobOffer.published_at).desc())
+        .where(or_(col(JobOffer.score).is_(None), col(JobOffer.score) >= min_score))
+        .order_by(col(JobOffer.score).desc().nulls_first(), col(JobOffer.published_at).desc())
     )
     return list(session.exec(query).all())
 
@@ -168,9 +174,11 @@ def get_profile(session: SessionDep) -> UserProfile:
 
 @app.put("/profile", response_model_exclude={"id"})
 def change_profile(change: ProfileChange, session: SessionDep) -> UserProfile:
-    """Save what the user is looking for."""
+    """Save what the user is looking for and the score threshold."""
     profile = get_the_profile(session)
     profile.looking_for = change.looking_for.strip()
+    if change.min_score is not None:
+        profile.min_score = change.min_score
     profile.updated_at = utc_now()
     session.add(profile)
     session.commit()

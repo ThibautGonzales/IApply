@@ -3,9 +3,12 @@
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
+from langchain_core.language_models import BaseChatModel
 from sqlmodel import Session, func, select
 
+from app.llm import get_chat_model, get_settings
 from app.models import JobOffer
+from app.scoring import score_unscored_offers, unscored_offers
 from app.sources import SOURCES, FetchJobs
 
 # How far back the very first collection of a source goes.
@@ -17,13 +20,17 @@ class CollectionResult:
     fetched: int = 0  # offers returned by the sources
     added: int = 0  # offers that were new and got saved
     errors: list[str] = field(default_factory=list)  # one message per failed source
+    scored: int = 0  # offers that got a score from the LLM
+    scoring_error: str | None = None  # why the offers could not be scored, if they could not
 
 
-def collect_jobs(session: Session, sources: dict[str, FetchJobs] | None = None) -> CollectionResult:
-    """Fetch the offers published since the last collection and save the new ones.
+def collect_jobs(
+    session: Session, sources: dict[str, FetchJobs] | None = None, model: BaseChatModel | None = None
+) -> CollectionResult:
+    """Fetch the offers published since the last collection, save the new ones, then score them.
 
-    `sources` defaults to every registered source. A failing source is reported
-    in `errors` and does not stop the others.
+    `sources` defaults to every registered source, and `model` to the LLM chosen on the LLM page.
+    A failing source is reported in `errors` and does not stop the others.
     """
     result = CollectionResult()
     for name, fetch_jobs in (sources or SOURCES).items():
@@ -34,7 +41,26 @@ def collect_jobs(session: Session, sources: dict[str, FetchJobs] | None = None) 
             continue
         result.fetched += len(offers)
         result.added += save_new_offers(session, name, offers)
+    result.scored, result.scoring_error = score_new_offers(session, model)
     return result
+
+
+def score_new_offers(session: Session, model: BaseChatModel | None) -> tuple[int, str | None]:
+    """Score the offers waiting for a score. Returns how many got one, and the error if any.
+
+    Never raises: without an LLM, without a profile or when the provider fails, the collection
+    still succeeds, and the offers left unscored (so visible) are tried again at the next one.
+    The batches scored before a failure are already saved: counting the offers still waiting
+    before and after gives how many got a score, failure or not.
+    """
+    waiting = len(unscored_offers(session))
+    error = None
+    try:
+        score_unscored_offers(session, model or get_chat_model(get_settings(session)))
+    except Exception as exception:
+        session.rollback()
+        error = str(exception)
+    return waiting - len(unscored_offers(session)), error
 
 
 def collect_since(session: Session, source: str) -> date:

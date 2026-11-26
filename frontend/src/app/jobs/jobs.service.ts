@@ -15,6 +15,8 @@ export interface JobOffer {
   description: string | null;
   url: string;
   remote: boolean;
+  /** Relevance from 0 to 100 given by the LLM, null until scored. */
+  score: number | null;
   published_at: string;
   collected_at: string;
 }
@@ -24,6 +26,9 @@ export interface CollectionResult {
   fetched: number;
   added: number;
   errors: string[];
+  scored: number;
+  /** Why the offers could not be scored (no LLM, empty profile, provider error), if they could not. */
+  scoring_error: string | null;
 }
 
 /** Talks to the backend `/jobs` routes. */

@@ -9,8 +9,20 @@
     [placeholder]="i18n.t('profile.placeholder')"
     (input)="saved.set(false)"
   ></textarea>
+  <label class="threshold">
+    {{ i18n.t('profile.minScore') }}
+    <input
+      #minScore
+      type="number"
+      min="0"
+      max="100"
+      [value]="profile.min_score"
+      (input)="saved.set(false)"
+    />
+  </label>
+  <small>{{ i18n.t('profile.minScoreHelp') }}</small>
   <div class="buttons">
-    <button type="button" (click)="save(text.value)" [disabled]="saving()">
+    <button type="button" (click)="save(text.value, minScore.valueAsNumber)" [disabled]="saving()">
       {{ i18n.t('profile.save') }}
     </button>
     @if (saved()) {
