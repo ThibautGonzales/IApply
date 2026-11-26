@@ -25,8 +25,9 @@ class FakeModel:
         self.prompts = []
         self.answer = answer
 
-    def with_structured_output(self, schema):
+    def with_structured_output(self, schema, method):
         assert schema is OfferScores
+        assert method == "json_schema"
 
         def reply(prompt: str) -> OfferScores:
             self.prompts.append(prompt)

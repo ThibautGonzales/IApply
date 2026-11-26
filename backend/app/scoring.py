@@ -2,6 +2,8 @@
 
 Offers are sent by batches in one prompt each, one line per offer, and the LLM must answer
 with a structured list of (id, score) only: no explanation, so few output tokens are spent.
+LangChain turns `OfferScores` into a JSON schema sent to the provider, then validates the
+answer against it: we get Python objects, never text to parse.
 """
 
 from langchain_core.language_models import BaseChatModel
@@ -68,7 +70,10 @@ def score_offers(model: BaseChatModel, looking_for: str, offers: list[JobOffer])
 
     An offer the LLM forgot gets no score (it stays unscored); an id it invented is ignored.
     """
-    scorer = model.with_structured_output(OfferScores)
+    # json_schema: the provider's own structured output, which constrains the answer to the schema
+    # while it is generated. The four providers support it, and on the newest Claude models the
+    # default method (a forced tool call) is not forced anymore and could come back without scores.
+    scorer = model.with_structured_output(OfferScores, method="json_schema")
     known_ids = {offer.id for offer in offers}
     scores = {}
     for batch in batches(offers):
