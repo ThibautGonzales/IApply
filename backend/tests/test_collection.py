@@ -1,7 +1,8 @@
 from datetime import UTC, date, datetime, timedelta
 
 from app.collection import FIRST_COLLECTION_DAYS, collect_jobs, collect_since
-from app.models import JobOffer
+from app.models import Application, JobOffer, UserProfile
+from tests.test_scoring import FakeModel, scores_of
 
 
 def make_offer(external_id: str, day: int = 20, source: str = "fake") -> JobOffer:
@@ -50,3 +51,60 @@ def test_a_failing_source_does_not_stop_the_others(session):
 
     assert result.added == 1
     assert result.errors == ["broken: quota reached"]
+
+
+def describe_profile(session, text: str = "Full stack and AI developer") -> None:
+    session.get(UserProfile, 1).looking_for = text
+    session.commit()
+
+
+def test_new_offers_are_scored_after_the_collection(session):
+    describe_profile(session)
+    model = FakeModel(lambda prompt: scores_of(*[(i, 70) for i in range(1, 10) if f"[{i}]" in prompt]))
+
+    result = collect_jobs(session, {"fake": lambda since: [make_offer("a"), make_offer("b")]}, model)
+
+    assert (result.scored, result.scoring_error) == (2, None)
+    assert "Full stack and AI developer" in model.prompts[0]
+    assert [offer.score for offer in session.exec(JobOffer.__table__.select()).all()] == [70, 70]
+
+
+def test_only_offers_of_the_list_without_a_score_are_sent(session):
+    describe_profile(session)
+    scored, hidden, applied, waiting = (make_offer(name) for name in ["scored", "hidden", "applied", "waiting"])
+    scored.score = 80
+    hidden.hidden = True
+    session.add_all([scored, hidden, applied, waiting])
+    session.commit()
+    session.add(Application(job_offer_id=applied.id))
+    session.commit()
+    model = FakeModel(lambda prompt: scores_of())
+
+    collect_jobs(session, {}, model)
+
+    assert "Offer waiting" in model.prompts[0]
+    assert all(f"Offer {name}" not in model.prompts[0] for name in ["scored", "hidden", "applied"])
+
+
+def test_without_a_profile_the_offers_are_saved_but_not_scored(session):
+    model = FakeModel(lambda prompt: scores_of())
+
+    result = collect_jobs(session, {"fake": lambda since: [make_offer("a")]}, model)
+
+    assert result.added == 1
+    assert result.scored == 0
+    assert "Profile page" in result.scoring_error
+    assert model.prompts == []
+
+
+def test_a_failing_llm_does_not_fail_the_collection(session):
+    describe_profile(session)
+
+    def broken(prompt):
+        raise RuntimeError("invalid x-api-key")
+
+    result = collect_jobs(session, {"fake": lambda since: [make_offer("a")]}, FakeModel(broken))
+
+    assert result.added == 1
+    assert result.scoring_error == "invalid x-api-key"
+    assert session.exec(JobOffer.__table__.select()).one().score is None

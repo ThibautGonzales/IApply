@@ -8,8 +8,9 @@ answer against it: we get Python objects, never text to parse.
 
 from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, Field
+from sqlmodel import Session, col, select
 
-from app.models import JobOffer
+from app.models import Application, JobOffer, UserProfile
 
 BATCH_SIZE = 20
 
@@ -80,3 +81,37 @@ def score_offers(model: BaseChatModel, looking_for: str, offers: list[JobOffer])
         answer = scorer.invoke(scoring_prompt(looking_for, batch))
         scores |= {item.id: item.score for item in answer.scores if item.id in known_ids}
     return scores
+
+
+# ---------- After a collection: score the offers waiting in the list ----------
+
+
+class EmptyProfileError(Exception):
+    """Nothing to score against: the user has not described what they are looking for."""
+
+
+def unscored_offers(session: Session) -> list[JobOffer]:
+    """The offers of the list (neither hidden nor applied to) that have no score yet."""
+    applied_ids = select(Application.job_offer_id)
+    query = (
+        select(JobOffer)
+        .where(col(JobOffer.score).is_(None))
+        .where(col(JobOffer.hidden).is_(False))
+        .where(col(JobOffer.id).not_in(applied_ids))
+    )
+    return list(session.exec(query).all())
+
+
+def score_unscored_offers(session: Session, model: BaseChatModel) -> int:
+    """Score every offer of the list that has none yet, save the scores and return how many."""
+    looking_for = session.get_one(UserProfile, 1).looking_for
+    if not looking_for:
+        raise EmptyProfileError("Describe what you are looking for on the Profile page.")
+    offers = unscored_offers(session)
+    scores = score_offers(model, looking_for, offers)
+    for offer in offers:
+        if offer.id in scores:
+            offer.score = scores[offer.id]
+            session.add(offer)
+    session.commit()
+    return len(scores)

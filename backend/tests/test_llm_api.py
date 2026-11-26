@@ -1,15 +1,6 @@
-import pytest
 from langchain_core.language_models import FakeListChatModel
 
 from app import llm, main
-
-
-@pytest.fixture(autouse=True)
-def env_file(tmp_path, monkeypatch):
-    """Each test gets its own .env file, in a temporary folder: the real key is never touched."""
-    path = tmp_path / "data" / ".env"
-    monkeypatch.setattr(llm, "ENV_PATH", path)
-    return path
 
 
 def test_nothing_is_chosen_at_first(client):

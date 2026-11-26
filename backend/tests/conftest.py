@@ -12,7 +12,7 @@ from alembic.config import Config  # noqa: E402
 from sqlalchemy.pool import StaticPool  # noqa: E402
 from sqlmodel import Session, create_engine  # noqa: E402
 
-from app import database  # noqa: E402
+from app import database, llm  # noqa: E402
 from app.database import get_session  # noqa: E402
 from app.main import app  # noqa: E402
 
@@ -40,3 +40,11 @@ def client(session):
     app.dependency_overrides[get_session] = lambda: session
     yield TestClient(app)
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def env_file(tmp_path, monkeypatch):
+    """Every test gets its own empty LLM .env file: a real API key is never read nor written."""
+    path = tmp_path / "data" / ".env"
+    monkeypatch.setattr(llm, "ENV_PATH", path)
+    return path

@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from sqlmodel import select
 
 from app import collection
-from app.models import Application, JobOffer
+from app.models import Application, JobOffer, UserProfile
 
 
 def make_offer(external_id: str, day: int) -> JobOffer:
@@ -33,7 +33,11 @@ def test_collect_returns_the_collection_summary(client, monkeypatch):
     response = client.post("/jobs/collect")
 
     assert response.status_code == 200
-    assert response.json() == {"fetched": 1, "added": 1, "errors": []}
+    body = response.json()
+    assert (body["fetched"], body["added"], body["errors"]) == (1, 1, [])
+    # No LLM chosen in the tests: the collection succeeds, the offer stays unscored.
+    assert body["scored"] == 0
+    assert "LLM page" in body["scoring_error"]
 
 
 def test_hide_removes_the_offer_from_the_list(client, session):
@@ -109,3 +113,43 @@ def test_change_description_with_an_empty_text_clears_it(client, session):
 
 def test_change_description_of_unknown_offer_returns_404(client):
     assert client.put("/jobs/999/description", json={"description": "x"}).status_code == 404
+
+
+
+def scored_offer(external_id: str, score: int | None, day: int = 20) -> JobOffer:
+    offer = make_offer(external_id, day)
+    offer.score = score
+    return offer
+
+
+def test_offers_under_the_threshold_leave_the_list(client, session):
+    session.add_all([scored_offer("yes", 50), scored_offer("no", 49)])
+    session.commit()
+
+    response = client.get("/jobs")
+
+    assert [job["external_id"] for job in response.json()] == ["yes"]
+
+
+def test_the_threshold_comes_from_the_profile(client, session):
+    session.add_all([scored_offer("high", 80), scored_offer("middle", 60)])
+    session.get(UserProfile, 1).min_score = 70
+    session.commit()
+
+    response = client.get("/jobs")
+
+    assert [job["external_id"] for job in response.json()] == ["high"]
+
+
+def test_unscored_offers_come_first_then_the_highest_scores(client, session):
+    session.add_all([
+        scored_offer("65", 65, day=23),
+        scored_offer("90-old", 90, day=20),
+        scored_offer("90-recent", 90, day=22),
+        scored_offer("unscored", None, day=21),
+    ])
+    session.commit()
+
+    response = client.get("/jobs")
+
+    assert [job["external_id"] for job in response.json()] == ["unscored", "90-recent", "90-old", "65"]
