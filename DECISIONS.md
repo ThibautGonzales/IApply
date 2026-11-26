@@ -123,7 +123,7 @@ Architecture decisions and the reason behind each one.
 4. `feat/userProfile`: the user's profile as plain text (done, see "User profile" below).
 5. `feat/offerScoring`: LLM score against the profile, only relevant offers shown (done, see
    "LLM settings" and "Offer scoring" below).
-6. `feat/manualOffer`: paste an offer, the LLM fills its fields.
+6. `feat/manualOffer`: paste an offer, the LLM fills its fields (done, see "Offers added by hand" below).
 7. `feat/coverLetter`: cover letter generation.
 8. Later: search settings screen, a second job API.
 9. Later: a "Suggest" button: the LLM proposes Jooble keywords from the profile, kept generic
@@ -218,3 +218,25 @@ Architecture decisions and the reason behind each one.
 - **The reason is not sent by the API**: the page reads `hidden` (otherwise the score is too low).
 - **The page has its own small table** rather than a mode in `JobTable`: other columns and buttons,
   and `JobTable` stays simple.
+
+## 2026-11-26 — Offers added by hand
+
+- **Two steps: the LLM reads, the user checks, then saves.** `POST /jobs/manual/extract` sends the
+  pasted text to the LLM and returns the fields (title, company, location, contract, salary, full
+  remote) without saving anything; the page shows them in a form to correct; `POST /jobs/manual`
+  saves the checked offer. An LLM mistake never reaches the database unseen.
+- **Same structured output as the scoring** (`method="json_schema"`, `ExtractedOffer` in
+  `app/manual_offer.py`). Every field is required in the schema and the LLM answers null for what the
+  text does not say: some providers ask for required fields, and the prompt says never to guess.
+- **The pasted text is saved as it is** as the offer `description`: the LLM does not rewrite it
+  (fewer output tokens, and the user's text stays exact).
+- **No new column, no migration**: `source = "manual"`, a random `external_id` (uuid) since the offer
+  has no id in a source, and `published_at` = the day it is added, as a date read in the text would
+  not be reliable.
+- **The link is required, and one link can only be added once** among the manual offers (409).
+  Collected offers are not checked, so a Jooble link never blocks a manual offer.
+- **Offers added by hand are never scored.** Adding one means the user wants to see it. Unscored, it
+  stays at the top of the list, where the user handles it first; the sort of the list is unchanged.
+  `unscored_offers()` leaves them out, so no collection scores them later. The score column shows ✎.
+- **A separate `AddOffer` component** on the offers page, which emits the saved offer (`added`): the
+  offers page puts it first without reloading the list.
