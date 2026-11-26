@@ -15,7 +15,9 @@
       @for (job of jobs(); track job.id) {
         <tr>
           <td class="score">
-            @if (job.score === null) {
+            @if (job.source === 'manual') {
+              <span [title]="i18n.t('table.manual')">✎</span>
+            } @else if (job.score === null) {
               <span [title]="i18n.t('table.notScored')">–</span>
             } @else {
               {{ job.score }}

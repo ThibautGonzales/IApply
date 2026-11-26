@@ -1,0 +1,79 @@
+@if (!opened()) {
+  <button type="button" class="open" (click)="opened.set(true)">{{ i18n.t('add.open') }}</button>
+} @else {
+  <div class="add-offer">
+    <p>{{ i18n.t('add.help') }}</p>
+    <label>
+      {{ i18n.t('add.text') }}
+      <textarea
+        class="text"
+        rows="12"
+        [value]="text()"
+        (input)="text.set($any($event.target).value)"
+      ></textarea>
+    </label>
+    <label>
+      {{ i18n.t('add.url') }}
+      <input class="url" type="url" [value]="url()" (input)="url.set($any($event.target).value)" />
+    </label>
+
+    @if (extracted(); as fields) {
+      <p>{{ i18n.t('add.check') }}</p>
+      <label>
+        {{ i18n.t('table.title') }}
+        <input #title class="title" [value]="fields.title" />
+      </label>
+      <label>
+        {{ i18n.t('table.company') }}
+        <input #company class="company" [value]="fields.company ?? ''" />
+      </label>
+      <label>
+        {{ i18n.t('table.location') }}
+        <input #location class="location" [value]="fields.location ?? ''" />
+      </label>
+      <label>
+        {{ i18n.t('table.contract') }}
+        <input #contract class="contract" [value]="fields.contract_type ?? ''" />
+      </label>
+      <label>
+        {{ i18n.t('add.salary') }}
+        <input #salary class="salary" [value]="fields.salary ?? ''" />
+      </label>
+      <label class="checkbox">
+        <input #remote class="remote" type="checkbox" [checked]="fields.remote" />
+        {{ i18n.t('add.remote') }}
+      </label>
+      <div class="buttons">
+        <button
+          type="button"
+          class="save"
+          [disabled]="busy()"
+          (click)="
+            save({
+              title: title.value.trim(),
+              company: company.value.trim() || null,
+              location: location.value.trim() || null,
+              contract_type: contract.value.trim() || null,
+              salary: salary.value.trim() || null,
+              remote: remote.checked,
+            })
+          "
+        >
+          {{ i18n.t('add.save') }}
+        </button>
+        <button type="button" class="cancel" (click)="close()">{{ i18n.t('add.cancel') }}</button>
+      </div>
+    } @else {
+      <div class="buttons">
+        <button type="button" class="read" [disabled]="busy() || !text().trim()" (click)="read()">
+          {{ busy() ? i18n.t('add.reading') : i18n.t('add.read') }}
+        </button>
+        <button type="button" class="cancel" (click)="close()">{{ i18n.t('add.cancel') }}</button>
+      </div>
+    }
+
+    @if (error() !== null) {
+      <p class="error">{{ i18n.t('add.failed') }} {{ error() }}</p>
+    }
+  </div>
+}

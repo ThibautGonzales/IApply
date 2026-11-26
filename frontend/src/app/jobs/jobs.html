@@ -8,6 +8,8 @@
     <p class="message">{{ message() }}</p>
   }
 
+  <app-add-offer (added)="add($event)" />
+
   <h3>{{ i18n.t('jobs.onSite') }} ({{ onSiteJobs().length }})</h3>
   <app-job-table
     class="on-site"

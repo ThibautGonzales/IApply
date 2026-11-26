@@ -35,6 +35,23 @@ export interface CollectionResult {
   scoring_error: string | null;
 }
 
+/** The fields the LLM read in a pasted offer (backend `ExtractedOffer`), checked by the user. */
+export interface ExtractedOffer {
+  title: string;
+  company: string | null;
+  location: string | null;
+  contract_type: string | null;
+  salary: string | null;
+  remote: boolean;
+}
+
+/** What is sent to save an offer added by hand (backend `ManualOfferCreate`). */
+export interface ManualOffer extends ExtractedOffer {
+  url: string;
+  /** The pasted text, saved as the offer description. */
+  description: string;
+}
+
 /** Talks to the backend `/jobs` routes. */
 @Injectable({ providedIn: 'root' })
 export class JobsService {
@@ -63,6 +80,16 @@ export class JobsService {
 
   changeDescription(jobId: number, description: string): Observable<JobOffer> {
     return this.http.put<JobOffer>(`/api/jobs/${jobId}/description`, { description });
+  }
+
+  /** Asks the LLM for the fields of a pasted offer. Nothing is saved. */
+  extractOffer(text: string): Observable<ExtractedOffer> {
+    return this.http.post<ExtractedOffer>('/api/jobs/manual/extract', { text });
+  }
+
+  /** Saves an offer added by hand. It is never scored, so it comes first in the list. */
+  addOffer(offer: ManualOffer): Observable<JobOffer> {
+    return this.http.post<JobOffer>('/api/jobs/manual', offer);
   }
 
   // Returns the created application; the tracking page will use it.

@@ -86,6 +86,18 @@ def test_only_offers_of_the_list_without_a_score_are_sent(session):
     assert all(f"Offer {name}" not in model.prompts[0] for name in ["scored", "hidden", "applied"])
 
 
+def test_offers_added_by_hand_are_never_scored(session):
+    describe_profile(session)
+    session.add_all([make_offer("collected"), make_offer("added", source="manual")])
+    session.commit()
+    model = FakeModel(lambda prompt: scores_of())
+
+    collect_jobs(session, {}, model)
+
+    assert "Offer collected" in model.prompts[0]
+    assert "Offer added" not in model.prompts[0]
+
+
 def test_without_a_profile_the_offers_are_saved_but_not_scored(session):
     model = FakeModel(lambda prompt: scores_of())
 

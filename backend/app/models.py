@@ -120,6 +120,28 @@ class DescriptionChange(SQLModel):
     description: str
 
 
+class ManualOfferText(SQLModel):
+    """Body of `POST /jobs/manual/extract`: the offer text pasted by the user."""
+
+    text: str = Field(min_length=1)
+
+
+class ManualOfferCreate(SQLModel):
+    """Body of `POST /jobs/manual`: the offer fields checked by the user, its link and pasted text.
+
+    Same limits as `JobOffer`, so a too long field is refused (422) instead of failing in the database.
+    """
+
+    url: str = Field(min_length=1)
+    title: str = Field(min_length=1, max_length=300)
+    company: str | None = Field(default=None, max_length=200)
+    location: str | None = Field(default=None, max_length=200)
+    contract_type: str | None = Field(default=None, max_length=100)
+    salary: str | None = Field(default=None, max_length=200)
+    remote: bool = False
+    description: str = ""  # the pasted text, saved as the offer description
+
+
 class ProfileChange(SQLModel):
     """Body of `PUT /profile`: what the user is looking for, and the score threshold (kept if missing)."""
 
