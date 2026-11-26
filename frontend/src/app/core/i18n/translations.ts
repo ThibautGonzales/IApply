@@ -8,6 +8,7 @@ const en = {
   'language.label': 'Language',
   'nav.jobs': 'Offers',
   'nav.applications': 'Tracking',
+  'nav.profile': 'Profile',
   'backend.label': 'Backend status:',
   'backend.checking': 'checking...',
   'backend.database': 'database',
@@ -50,6 +51,12 @@ const en = {
   'status.rejected': 'Rejected',
   'status.accepted': 'Accepted',
   'status.closed': 'Closed without answer',
+  'profile.title': 'My profile',
+  'profile.help': 'Describe the job you are looking for: it will be used to filter the offers.',
+  'profile.placeholder':
+    'Job, technologies, location, remote, contract, salary, what you want to avoid...',
+  'profile.save': 'Save',
+  'profile.saved': 'Saved on',
 };
 
 export type TranslationKey = keyof typeof en;
@@ -61,6 +68,7 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     'language.label': 'Langue',
     'nav.jobs': 'Offres',
     'nav.applications': 'Suivi',
+    'nav.profile': 'Profil',
     'backend.label': 'État du backend :',
     'backend.checking': 'vérification...',
     'backend.database': 'base de données',
@@ -103,5 +111,11 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     'status.rejected': 'Refusée',
     'status.accepted': 'Acceptée',
     'status.closed': 'Clôturée sans réponse',
+    'profile.title': 'Mon profil',
+    'profile.help': 'Décris le poste que tu cherches : il servira à filtrer les offres.',
+    'profile.placeholder':
+      'Poste, technos, lieu, télétravail, contrat, salaire, ce que tu veux éviter...',
+    'profile.save': 'Enregistrer',
+    'profile.saved': 'Enregistré le',
   },
 };

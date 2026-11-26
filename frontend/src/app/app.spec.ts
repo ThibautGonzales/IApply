@@ -55,13 +55,17 @@ describe('App', () => {
     expect(document.documentElement.lang).toBe('fr');
   });
 
-  it('shows a menu with the offers and the tracking pages', async () => {
+  it('shows a menu with the offers, tracking and profile pages', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     await fixture.whenStable();
 
     const links = (fixture.nativeElement as HTMLElement).querySelectorAll('nav a');
-    expect([...links].map((link) => link.getAttribute('href'))).toEqual(['/', '/applications']);
+    expect([...links].map((link) => link.getAttribute('href'))).toEqual([
+      '/',
+      '/applications',
+      '/profile',
+    ]);
   });
 
   it('switches the language with the EN / FR buttons, starting from the saved one', async () => {
