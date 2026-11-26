@@ -121,7 +121,8 @@ Architecture decisions and the reason behind each one.
 2. `feat/offerActions`: hide and mark as applied from the list.
 3. `feat/applicationTracking`: tracking page, statuses, automatic closing, link.
 4. `feat/userProfile`: the user's profile as plain text (done, see "User profile" below).
-5. `feat/offerScoring`: LLM score against the profile, only relevant offers shown.
+5. `feat/offerScoring`: LLM score against the profile, only relevant offers shown (done, see
+   "LLM settings" and "Offer scoring" below).
 6. `feat/manualOffer`: paste an offer, the LLM fills its fields.
 7. `feat/coverLetter`: cover letter generation.
 8. Later: search settings screen, a second job API.
@@ -174,3 +175,28 @@ Architecture decisions and the reason behind each one.
   Changing provider forgets the typed model, which means nothing to another provider.
 - **A "Test" button** (`POST /llm/test`) sends a tiny prompt and shows the provider's error as it is.
 - **Tests never call a real LLM**: they use LangChain's `FakeListChatModel` and a temporary `.env`.
+
+## 2026-11-26 — Offer scoring
+
+- **A score from 0 to 100 per offer, with no reason.** A reason would cost output tokens for
+  something the user does not read. `JobOffer.score` stays empty until the LLM has scored the offer.
+- **The scale is written in the prompt** (`app/scoring.py`): 80-100 is the job the user would love,
+  50-79 a job they look for too (a secondary wish, or part of the main one), under 50 not really
+  what they look for. **50 is the yes/no line**; the scores also rank the offers.
+- **The threshold is set by the user on the Profile page** (`UserProfile.min_score`, 50 by default).
+  It is applied when the list is read, so changing it needs no new LLM call.
+- **Scoring runs at the end of each collection**, on every offer of the list with no score yet
+  (neither hidden nor applied to). Taking longer is fine: the goal is to save the user's time.
+- **Never blocks the collection**: without an LLM, with an empty profile or on a provider error, the
+  offers are saved unscored, the reason is shown, and the next collection tries again.
+- **Unscored offers stay in the list, at the top**: nothing disappears without the LLM's verdict.
+  Then the list goes from the highest score to the lowest, then the most recent.
+- **Batches of 20 offers per call**, one line per offer, and a **structured answer** (`OfferScores`, a
+  list of id + score). We ask for the provider's own structured output (`method="json_schema"`),
+  supported by the four providers: the answer is constrained to the schema while it is generated,
+  then validated by Pydantic. No text is parsed. The default method (a forced tool call) is not
+  forced on the newest Claude models and could come back without scores.
+- **The migrations are new ones**: the default threshold went from 70 to 50 in a second migration,
+  since the first one may already be applied.
+- **Rejected offers** (scored under the threshold) will get their own page later, where one can be
+  brought back to the list.
