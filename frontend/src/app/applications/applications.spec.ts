@@ -21,6 +21,8 @@ const application: Application = {
     description: 'Angular and Python.',
     url: 'https://fr.jooble.org/desc/42',
     remote: false,
+    hidden: false,
+    restored: false,
     score: 72,
     published_at: '2026-11-19T09:00:00Z',
     collected_at: '2026-11-19T10:00:00Z',
