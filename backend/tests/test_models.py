@@ -76,8 +76,10 @@ def test_a_new_offer_has_no_score_yet(session):
     assert session.get(JobOffer, 1).score is None
 
 
-def test_the_profile_threshold_starts_at_50(session):
-    assert session.get(UserProfile, 1).min_score == 50
+def test_both_profile_thresholds_start_at_50(session):
+    profile = session.get(UserProfile, 1)
+
+    assert (profile.min_score_onsite, profile.min_score_remote) == (50, 50)
 
 
 def test_a_profile_left_at_the_first_default_moves_to_50(session):
@@ -87,4 +89,16 @@ def test_a_profile_left_at_the_first_default_moves_to_50(session):
 
     command.upgrade(ALEMBIC_CONFIG, "head")
 
-    assert session.execute(text("SELECT min_score FROM user_profile")).scalar() == 50
+    assert session.execute(text("SELECT min_score_onsite FROM user_profile")).scalar() == 50
+
+
+def test_the_old_threshold_is_copied_to_both_new_ones(session):
+    # A database from before the split, where the user had chosen 65.
+    command.downgrade(ALEMBIC_CONFIG, "c9e1a3b5d7f8")
+    session.execute(text("UPDATE user_profile SET min_score = 65"))
+    session.commit()
+
+    command.upgrade(ALEMBIC_CONFIG, "head")
+
+    thresholds = session.execute(text("SELECT min_score_onsite, min_score_remote FROM user_profile")).one()
+    assert tuple(thresholds) == (65, 65)

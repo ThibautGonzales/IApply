@@ -9,20 +9,38 @@
     [placeholder]="i18n.t('profile.placeholder')"
     (input)="saved.set(false)"
   ></textarea>
+  <p class="thresholds">{{ i18n.t('profile.minScore') }}</p>
   <label class="threshold">
-    {{ i18n.t('profile.minScore') }}
+    {{ i18n.t('profile.minScoreOnsite') }}
     <input
-      #minScore
+      #minScoreOnsite
+      class="onsite"
       type="number"
       min="0"
       max="100"
-      [value]="profile.min_score"
+      [value]="profile.min_score_onsite"
+      (input)="saved.set(false)"
+    />
+  </label>
+  <label class="threshold">
+    {{ i18n.t('profile.minScoreRemote') }}
+    <input
+      #minScoreRemote
+      class="remote"
+      type="number"
+      min="0"
+      max="100"
+      [value]="profile.min_score_remote"
       (input)="saved.set(false)"
     />
   </label>
   <small>{{ i18n.t('profile.minScoreHelp') }}</small>
   <div class="buttons">
-    <button type="button" (click)="save(text.value, minScore.valueAsNumber)" [disabled]="saving()">
+    <button
+      type="button"
+      (click)="save(text.value, minScoreOnsite.valueAsNumber, minScoreRemote.valueAsNumber)"
+      [disabled]="saving()"
+    >
       {{ i18n.t('profile.save') }}
     </button>
     @if (saved()) {

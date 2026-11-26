@@ -87,6 +87,8 @@ const en = {
   'profile.save': 'Save',
   'profile.saved': 'Saved on',
   'profile.minScore': 'Show offers scored from',
+  'profile.minScoreOnsite': 'On-site or hybrid:',
+  'profile.minScoreRemote': 'Full remote:',
   'profile.minScoreHelp':
     'Out of 100. From 50, an offer is what you are looking for; under 50, it is not really.',
   'llm.title': 'LLM',
@@ -193,6 +195,8 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     'profile.save': 'Enregistrer',
     'profile.saved': 'Enregistré le',
     'profile.minScore': 'Afficher les offres notées à partir de',
+    'profile.minScoreOnsite': 'Présentiel ou hybride :',
+    'profile.minScoreRemote': 'Full remote :',
     'profile.minScoreHelp':
       "Sur 100. À partir de 50, l'offre correspond à ce que tu cherches ; en dessous, pas vraiment.",
     'llm.title': 'LLM',

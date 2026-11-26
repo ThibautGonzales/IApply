@@ -5,8 +5,10 @@ import { Observable } from 'rxjs';
 /** What the user is looking for, as returned by the backend `UserProfile`. */
 export interface UserProfile {
   looking_for: string;
-  /** Offers scored under this threshold (0-100) leave the list. */
-  min_score: number;
+  /** Offers scored under their threshold (0-100) leave the list: on-site or hybrid offers... */
+  min_score_onsite: number;
+  /** ...and full remote offers. */
+  min_score_remote: number;
   updated_at: string;
 }
 
@@ -19,10 +21,15 @@ export class ProfileService {
     return this.http.get<UserProfile>('/api/profile');
   }
 
-  saveProfile(lookingFor: string, minScore: number): Observable<UserProfile> {
+  saveProfile(
+    lookingFor: string,
+    minScoreOnsite: number,
+    minScoreRemote: number,
+  ): Observable<UserProfile> {
     return this.http.put<UserProfile>('/api/profile', {
       looking_for: lookingFor,
-      min_score: minScore,
+      min_score_onsite: minScoreOnsite,
+      min_score_remote: minScoreRemote,
     });
   }
 }
