@@ -1,0 +1,14 @@
+textarea {
+  box-sizing: border-box;
+  display: block;
+  max-width: 60rem;
+  width: 100%;
+}
+
+.buttons {
+  margin-top: 0.4rem;
+}
+
+.saved {
+  margin-left: 0.6rem;
+}

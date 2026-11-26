@@ -1,9 +1,12 @@
 from datetime import UTC, datetime
 
 import pytest
+from alembic import command
+from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
-from app.models import JobOffer
+from app.models import JobOffer, UserProfile
+from tests.conftest import ALEMBIC_CONFIG
 
 
 def make_offer(**overrides) -> JobOffer:
@@ -39,3 +42,21 @@ def test_same_id_from_another_source_is_accepted(session):
     session.add(make_offer())
     session.add(make_offer(source="adzuna"))
     session.commit()
+
+
+def test_the_profile_exists_empty_from_the_start(session):
+    profile = session.get(UserProfile, 1)
+
+    assert profile.looking_for == ""
+    assert profile.updated_at is not None
+
+
+def test_profile_migration_keeps_a_profile_saved_before_it(session):
+    # A database that got the table one migration earlier, and where the profile was saved since.
+    command.downgrade(ALEMBIC_CONFIG, "d4f6b8c0e2a3")
+    session.execute(text("UPDATE user_profile SET looking_for = 'Saved before' WHERE id = 1"))
+    session.commit()
+
+    command.upgrade(ALEMBIC_CONFIG, "head")
+
+    assert session.get(UserProfile, 1).looking_for == "Saved before"

@@ -120,11 +120,13 @@ Architecture decisions and the reason behind each one.
 1. `docs/updateRoadmap`: this update.
 2. `feat/offerActions`: hide and mark as applied from the list.
 3. `feat/applicationTracking`: tracking page, statuses, automatic closing, link.
-4. `feat/userProfile`: the user's profile as plain text.
+4. `feat/userProfile`: the user's profile as plain text (done, see "User profile" below).
 5. `feat/offerScoring`: LLM score against the profile, only relevant offers shown.
 6. `feat/manualOffer`: paste an offer, the LLM fills its fields.
 7. `feat/coverLetter`: cover letter generation.
 8. Later: search settings screen, a second job API.
+9. Later: a "Suggest" button: the LLM proposes Jooble keywords from the profile, kept generic
+   on purpose (the scoring does the real sorting), and the user corrects them.
 
 ## 2026-11-25 — Full offer text
 
@@ -139,3 +141,19 @@ Architecture decisions and the reason behind each one.
   the text is needed before applying (cover letter) and stays useful after (interview).
 - **LLM scoring works with the title, company, location and contract** of an offer, plus its
   description when the user has pasted one.
+
+## 2026-11-26 — User profile
+
+- **The profile is only "what I am looking for", as plain text** (`UserProfile.looking_for`): job,
+  technologies, location, remote, contract, what to avoid. No CV: the scoring only sees the offer
+  title, company, location and contract (plus the pasted text, when there is one), which say little
+  about the technologies, so matching a CV against them would not help.
+- **The profile filters the offers, it does not drive the Jooble search.** The search keeps its
+  `JOOBLE_*` settings in `.env`. A later "Suggest" button may propose keywords from the profile
+  (roadmap item 9).
+- **One user, so one row (id 1), created empty by a migration**: the profile always exists, and the
+  routes only read and update it. The id stays inside the backend: `GET /profile` and `PUT /profile`
+  take none and leave it out of their answer.
+- **The row has its own migration** (`e5a7c9d1f3b4`), separate from the one creating the table: a
+  migration already applied somewhere is never edited, since Alembic does not run it again.
+- **Cover letter examples are not part of the profile**: they come with `feat/coverLetter`.

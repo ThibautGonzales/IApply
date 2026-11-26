@@ -58,5 +58,13 @@ The free key allows 100 calls a day; one collection uses about 6 to 10.
 
 API routes: `POST /jobs/collect` runs a collection, `GET /jobs` lists the saved offers.
 
+## Your profile
+
+The **Profile** page holds what you are looking for, as plain text (job, technologies,
+location, remote, contract, what to avoid). It will be used to filter the offers. The
+Jooble search itself stays set by the `JOOBLE_*` settings in `.env`.
+
+API routes: `GET /profile` reads it, `PUT /profile` saves it.
+
 To run without Docker, see [backend/README.md](backend/README.md) and
 [frontend/README.md](frontend/README.md).
