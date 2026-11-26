@@ -73,6 +73,19 @@ class UserProfile(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
 
 
+class LlmSettings(SQLModel, table=True):
+    """The LLM chosen on the LLM page. One row (id 1), created by a migration.
+
+    The API key is a secret: it is never stored here but in a local `.env` file (see `app/llm.py`).
+    """
+
+    __tablename__ = "llm_settings"
+
+    id: int | None = Field(default=None, primary_key=True)
+    provider: str | None = Field(default=None, max_length=50)  # a key of `llm.PROVIDERS`, e.g. "anthropic"
+    model: str | None = Field(default=None, max_length=200)  # None means the provider's default model
+
+
 class ApplicationWithJob(SQLModel):
     """What the tracking page receives: an application and its offer, in one object."""
 
