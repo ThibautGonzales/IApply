@@ -153,3 +153,14 @@ def test_unscored_offers_come_first_then_the_highest_scores(client, session):
     response = client.get("/jobs")
 
     assert [job["external_id"] for job in response.json()] == ["unscored", "90-recent", "90-old", "65"]
+
+
+def test_a_restored_offer_stays_in_the_list_whatever_its_score(client, session):
+    restored = scored_offer("restored", 10)
+    restored.restored = True
+    session.add_all([restored, scored_offer("rejected", 10)])
+    session.commit()
+
+    response = client.get("/jobs")
+
+    assert [job["external_id"] for job in response.json()] == ["restored"]

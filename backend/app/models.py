@@ -36,6 +36,9 @@ class JobOffer(SQLModel, table=True):
     # Relevance from 0 to 100 given by the LLM against the user's profile. None until scored
     # (no LLM set up yet, or the LLM failed): such an offer stays in the list.
     score: int | None = Field(default=None)
+    # Set when the user brings a rejected offer back: it stays in the list whatever its score.
+    # A flag, not a score change: the next collection would score it again and reject it again.
+    restored: bool = Field(default=False, sa_column_kwargs={"server_default": false()})
     published_at: datetime = Field(sa_type=DateTime(timezone=True), index=True)
     collected_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
 

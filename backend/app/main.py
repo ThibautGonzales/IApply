@@ -54,7 +54,8 @@ def collect(session: SessionDep) -> CollectionResult:
 def list_jobs(session: SessionDep) -> list[JobOffer]:
     """The offers still to look at (neither hidden nor applied to), most interesting first.
 
-    Offers scored under the profile threshold are left out. Offers not scored yet come first,
+    Offers scored under the profile threshold are left out, unless the user restored them.
+    Offers not scored yet come first,
     so the user sees them; then the highest scores, then the most recent.
     """
     applied_ids = select(Application.job_offer_id)
@@ -63,7 +64,13 @@ def list_jobs(session: SessionDep) -> list[JobOffer]:
         select(JobOffer)
         .where(col(JobOffer.hidden).is_(False))
         .where(col(JobOffer.id).not_in(applied_ids))
-        .where(or_(col(JobOffer.score).is_(None), col(JobOffer.score) >= min_score))
+        .where(
+            or_(
+                col(JobOffer.score).is_(None),
+                col(JobOffer.score) >= min_score,
+                col(JobOffer.restored).is_(True),
+            )
+        )
         .order_by(col(JobOffer.score).desc().nulls_first(), col(JobOffer.published_at).desc())
     )
     return list(session.exec(query).all())
