@@ -50,6 +50,7 @@ def test_the_prompt_holds_the_profile_and_one_line_per_offer():
     assert "AI developer, remote" in prompt
     assert "[1] Python developer | Acme | Lyon | full remote" in prompt
     assert "[2] Data engineer\nFull text pasted by the user" in prompt
+    assert "50 is the line between yes and no" in prompt
 
 
 def test_offers_are_sent_by_batches_of_20():

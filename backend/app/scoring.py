@@ -41,11 +41,17 @@ def describe(offer: JobOffer) -> str:
 def scoring_prompt(looking_for: str, offers: list[JobOffer]) -> str:
     offer_lines = "\n\n".join(describe(offer) for offer in offers)
     return (
-        "You sort job offers for a job seeker.\n"
-        f"What they are looking for:\n{looking_for}\n\n"
-        "Give each offer below a relevance score from 0 (unrelated) to 100 (exactly what they look for),\n"
-        "with the offer's number as id. Most offers only show a title, a company, a location and a\n"
-        "contract: judge on what you see, and keep a middle score when it is not enough to decide.\n\n"
+        "You sort job offers for a job seeker. Here is what they are looking for, in their words.\n"
+        "It may hold several wishes, from the ideal job to jobs they would also accept:\n"
+        f"{looking_for}\n\n"
+        "Give each offer below a score from 0 to 100, with the offer's number as id:\n"
+        "- 80 to 100: the job they would love, matching their main wish.\n"
+        "- 50 to 79: a job they are looking for too, matching a wish they would also accept,\n"
+        "  or only part of their main wish. The closer to the main wish, the higher.\n"
+        "- under 50: not really what they are looking for. The further from it, the lower.\n"
+        "50 is the line between yes and no. The scores also rank the offers from the most to the\n"
+        "least interesting, so give different scores to offers that are not equally interesting.\n"
+        "Most offers only show a title, a company, a location and a contract: judge on what you see.\n\n"
         f"{offer_lines}"
     )
 
