@@ -15,6 +15,10 @@ export interface JobOffer {
   description: string | null;
   url: string;
   remote: boolean;
+  /** Hidden by the user: the offer is on the rejected page. */
+  hidden: boolean;
+  /** Brought back from the rejected page: stays in the list whatever its score. */
+  restored: boolean;
   /** Relevance from 0 to 100 given by the LLM, null until scored. */
   score: number | null;
   published_at: string;
@@ -42,6 +46,15 @@ export class JobsService {
 
   collect(): Observable<CollectionResult> {
     return this.http.post<CollectionResult>('/api/jobs/collect', null);
+  }
+
+  /** The offers of the last week left out of the list: hidden, or scored under the threshold. */
+  getRejectedJobs(): Observable<JobOffer[]> {
+    return this.http.get<JobOffer[]>('/api/jobs/rejected');
+  }
+
+  restore(jobId: number): Observable<void> {
+    return this.http.post<void>(`/api/jobs/${jobId}/restore`, null);
   }
 
   hide(jobId: number): Observable<void> {

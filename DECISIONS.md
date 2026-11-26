@@ -202,5 +202,19 @@ Architecture decisions and the reason behind each one.
   forced on the newest Claude models and could come back without scores.
 - **The migrations are new ones**: the default threshold went from 70 to 50 in a second migration,
   since the first one may already be applied.
-- **Rejected offers** (scored under the threshold) will get their own page later, where one can be
-  brought back to the list.
+- **Rejected offers** (scored under the threshold) get their own page, where one can be brought back
+  to the list (see below).
+
+## 2026-11-26 — Rejected offers page
+
+- **A rejected offer is one left out of the list**: hidden by the user, or scored under the
+  threshold. Both are on the same page, with a "Reason" column, so a "Hide" clicked by mistake can be
+  undone too. Applied offers are never rejected: they are on the tracking page.
+- **Bringing an offer back sets a new `restored` flag** (and clears `hidden`). The score is kept:
+  clearing it would make the next collection score the offer again and reject it again. Lowering
+  the threshold was not an option either: it brings back every offer, not one.
+- **Only the last 7 days** (`REJECTED_OFFERS_DAYS`), on `published_at`, so the page does not grow
+  forever. No new date column: an old offer hidden today by mistake does not show there.
+- **The reason is not sent by the API**: the page reads `hidden` (otherwise the score is too low).
+- **The page has its own small table** rather than a mode in `JobTable`: other columns and buttons,
+  and `JobTable` stays simple.

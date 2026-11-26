@@ -1,7 +1,8 @@
+from datetime import timedelta
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Response, status
-from sqlmodel import Session, col, or_, select
+from sqlmodel import Session, and_, col, or_, select
 
 from app.collection import CollectionResult, collect_jobs
 from app.database import get_session, is_database_reachable
@@ -54,7 +55,8 @@ def collect(session: SessionDep) -> CollectionResult:
 def list_jobs(session: SessionDep) -> list[JobOffer]:
     """The offers still to look at (neither hidden nor applied to), most interesting first.
 
-    Offers scored under the profile threshold are left out. Offers not scored yet come first,
+    Offers scored under the profile threshold are left out, unless the user restored them.
+    Offers not scored yet come first,
     so the user sees them; then the highest scores, then the most recent.
     """
     applied_ids = select(Application.job_offer_id)
@@ -63,7 +65,37 @@ def list_jobs(session: SessionDep) -> list[JobOffer]:
         select(JobOffer)
         .where(col(JobOffer.hidden).is_(False))
         .where(col(JobOffer.id).not_in(applied_ids))
-        .where(or_(col(JobOffer.score).is_(None), col(JobOffer.score) >= min_score))
+        .where(
+            or_(
+                col(JobOffer.score).is_(None),
+                col(JobOffer.score) >= min_score,
+                col(JobOffer.restored).is_(True),
+            )
+        )
+        .order_by(col(JobOffer.score).desc().nulls_first(), col(JobOffer.published_at).desc())
+    )
+    return list(session.exec(query).all())
+
+
+# The rejected offers page only shows the last week: older ones would make it grow forever.
+REJECTED_OFFERS_DAYS = 7
+
+
+@app.get("/jobs/rejected")
+def list_rejected_jobs(session: SessionDep) -> list[JobOffer]:
+    """The offers left out of the list (hidden by the user, or scored under the threshold and not
+    restored), published in the last week, sorted like the list. Applied offers are not rejected."""
+    applied_ids = select(Application.job_offer_id)
+    min_score = get_the_profile(session).min_score
+    under_threshold = and_(
+        col(JobOffer.score) < min_score,  # an unscored offer is never under the threshold
+        col(JobOffer.restored).is_(False),
+    )
+    query = (
+        select(JobOffer)
+        .where(col(JobOffer.id).not_in(applied_ids))
+        .where(col(JobOffer.published_at) >= utc_now() - timedelta(days=REJECTED_OFFERS_DAYS))
+        .where(or_(col(JobOffer.hidden).is_(True), under_threshold))
         .order_by(col(JobOffer.score).desc().nulls_first(), col(JobOffer.published_at).desc())
     )
     return list(session.exec(query).all())
@@ -81,6 +113,16 @@ def hide_job(job_id: int, session: SessionDep) -> None:
     """Remove an offer from the list. It stays in the database so a collection does not bring it back."""
     job = get_job_or_404(session, job_id)
     job.hidden = True
+    session.add(job)
+    session.commit()
+
+
+@app.post("/jobs/{job_id}/restore", status_code=status.HTTP_204_NO_CONTENT)
+def restore_job(job_id: int, session: SessionDep) -> None:
+    """Bring a rejected offer back to the list, whatever the reason it left: hidden or low score."""
+    job = get_job_or_404(session, job_id)
+    job.hidden = False
+    job.restored = True
     session.add(job)
     session.commit()
 

@@ -55,7 +55,7 @@ describe('App', () => {
     expect(document.documentElement.lang).toBe('fr');
   });
 
-  it('shows a menu with the offers, tracking, profile and LLM pages', async () => {
+  it('shows a menu with the offers, rejected offers, tracking, profile and LLM pages', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -63,6 +63,7 @@ describe('App', () => {
     const links = (fixture.nativeElement as HTMLElement).querySelectorAll('nav a');
     expect([...links].map((link) => link.getAttribute('href'))).toEqual([
       '/',
+      '/rejected',
       '/applications',
       '/profile',
       '/llm',
