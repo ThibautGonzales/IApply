@@ -6,6 +6,8 @@ LangChain turns `OfferScores` into a JSON schema sent to the provider, then vali
 answer against it: we get Python objects, never text to parse.
 """
 
+from collections.abc import Iterator
+
 from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, Field
 from sqlmodel import Session, col, select
@@ -66,21 +68,21 @@ def batches(offers: list[JobOffer], size: int = BATCH_SIZE) -> list[list[JobOffe
     return [offers[i : i + size] for i in range(0, len(offers), size)]
 
 
-def score_offers(model: BaseChatModel, looking_for: str, offers: list[JobOffer]) -> dict[int, int]:
-    """Score the offers, one LLM call per batch, and return {offer id: score}.
+def score_offers(model: BaseChatModel, looking_for: str, offers: list[JobOffer]) -> Iterator[dict[int, int]]:
+    """Score the offers, one LLM call per batch, and yield {offer id: score} after each batch.
 
+    Yielding batch by batch lets the caller save each one at once: a failure on a later batch
+    does not lose (nor make us pay again for) the scores already received.
     An offer the LLM forgot gets no score (it stays unscored); an id it invented is ignored.
     """
     # json_schema: the provider's own structured output, which constrains the answer to the schema
     # while it is generated. The four providers support it, and on the newest Claude models the
     # default method (a forced tool call) is not forced anymore and could come back without scores.
     scorer = model.with_structured_output(OfferScores, method="json_schema")
-    known_ids = {offer.id for offer in offers}
-    scores = {}
     for batch in batches(offers):
         answer = scorer.invoke(scoring_prompt(looking_for, batch))
-        scores |= {item.id: item.score for item in answer.scores if item.id in known_ids}
-    return scores
+        batch_ids = {offer.id for offer in batch}
+        yield {item.id: item.score for item in answer.scores if item.id in batch_ids}
 
 
 # ---------- After a collection: score the offers waiting in the list ----------
@@ -102,16 +104,15 @@ def unscored_offers(session: Session) -> list[JobOffer]:
     return list(session.exec(query).all())
 
 
-def score_unscored_offers(session: Session, model: BaseChatModel) -> int:
-    """Score every offer of the list that has none yet, save the scores and return how many."""
+def score_unscored_offers(session: Session, model: BaseChatModel) -> None:
+    """Score every offer of the list that has none yet, saving the scores after each batch."""
     looking_for = session.get_one(UserProfile, 1).looking_for
     if not looking_for:
         raise EmptyProfileError("Describe what you are looking for on the Profile page.")
     offers = unscored_offers(session)
-    scores = score_offers(model, looking_for, offers)
-    for offer in offers:
-        if offer.id in scores:
-            offer.score = scores[offer.id]
-            session.add(offer)
-    session.commit()
-    return len(scores)
+    by_id = {offer.id: offer for offer in offers}
+    for scores in score_offers(model, looking_for, offers):
+        for offer_id, score in scores.items():
+            by_id[offer_id].score = score
+            session.add(by_id[offer_id])
+        session.commit()

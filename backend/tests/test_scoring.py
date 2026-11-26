@@ -3,7 +3,16 @@ from datetime import UTC, datetime
 from langchain_core.runnables import RunnableLambda
 
 from app.models import JobOffer
-from app.scoring import OfferScore, OfferScores, score_offers, scoring_prompt
+from app.scoring import OfferScore, OfferScores, scoring_prompt
+from app.scoring import score_offers as score_by_batch
+
+
+def score_offers(model, looking_for, offers) -> dict[int, int]:
+    """All the scores at once, merged from the batches."""
+    scores = {}
+    for batch_scores in score_by_batch(model, looking_for, offers):
+        scores |= batch_scores
+    return scores
 
 
 def make_offer(offer_id: int, **overrides) -> JobOffer:

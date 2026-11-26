@@ -108,3 +108,21 @@ def test_a_failing_llm_does_not_fail_the_collection(session):
     assert result.added == 1
     assert result.scoring_error == "invalid x-api-key"
     assert session.exec(JobOffer.__table__.select()).one().score is None
+
+
+def test_the_batches_scored_before_a_failure_are_kept(session):
+    describe_profile(session)
+    session.add_all([make_offer(str(i)) for i in range(25)])  # 2 batches: 20 + 5
+    session.commit()
+
+    def first_batch_only(prompt):
+        if "[21]" in prompt:  # the second batch
+            raise RuntimeError("overloaded")
+        return scores_of(*[(i, 60) for i in range(1, 21)])
+
+    result = collect_jobs(session, {}, FakeModel(first_batch_only))
+
+    assert (result.scored, result.scoring_error) == (20, "overloaded")
+    scores = [offer.score for offer in session.exec(JobOffer.__table__.select()).all()]
+    assert scores.count(60) == 20
+    assert scores.count(None) == 5

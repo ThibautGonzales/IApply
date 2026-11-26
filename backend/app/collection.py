@@ -8,7 +8,7 @@ from sqlmodel import Session, func, select
 
 from app.llm import get_chat_model, get_settings
 from app.models import JobOffer
-from app.scoring import score_unscored_offers
+from app.scoring import score_unscored_offers, unscored_offers
 from app.sources import SOURCES, FetchJobs
 
 # How far back the very first collection of a source goes.
@@ -49,13 +49,18 @@ def score_new_offers(session: Session, model: BaseChatModel | None) -> tuple[int
     """Score the offers waiting for a score. Returns how many got one, and the error if any.
 
     Never raises: without an LLM, without a profile or when the provider fails, the collection
-    still succeeds, and the offers stay unscored (so visible) until the next collection.
+    still succeeds, and the offers left unscored (so visible) are tried again at the next one.
+    The batches scored before a failure are already saved: counting the offers still waiting
+    before and after gives how many got a score, failure or not.
     """
+    waiting = len(unscored_offers(session))
+    error = None
     try:
-        return score_unscored_offers(session, model or get_chat_model(get_settings(session))), None
-    except Exception as error:
+        score_unscored_offers(session, model or get_chat_model(get_settings(session)))
+    except Exception as exception:
         session.rollback()
-        return 0, str(error)
+        error = str(exception)
+    return waiting - len(unscored_offers(session)), error
 
 
 def collect_since(session: Session, source: str) -> date:
