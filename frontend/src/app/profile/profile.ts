@@ -3,7 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { I18nService } from '../core/i18n/i18n.service';
 import { ProfileService, UserProfile } from './profile.service';
 
-/** Profile page: what the user is looking for, and the score under which offers leave the list. */
+/** Profile page: what the user is looking for, and the scores under which offers leave the list. */
 @Component({
   imports: [DatePipe],
   selector: 'app-profile',
@@ -23,9 +23,9 @@ export class Profile implements OnInit {
     this.profileService.getProfile().subscribe((profile) => this.profile.set(profile));
   }
 
-  protected save(text: string, minScore: number): void {
+  protected save(text: string, minScoreOnsite: number, minScoreRemote: number): void {
     this.saving.set(true);
-    this.profileService.saveProfile(text, minScore).subscribe({
+    this.profileService.saveProfile(text, minScoreOnsite, minScoreRemote).subscribe({
       next: (profile) => {
         this.profile.set(profile);
         this.saving.set(false);

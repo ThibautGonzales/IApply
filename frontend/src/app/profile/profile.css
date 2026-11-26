@@ -5,9 +5,13 @@ textarea {
   width: 100%;
 }
 
+.thresholds {
+  margin: 0.6rem 0 0;
+}
+
 .threshold {
   display: block;
-  margin-top: 0.6rem;
+  margin-top: 0.3rem;
 }
 
 .threshold input {
