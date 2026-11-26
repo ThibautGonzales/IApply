@@ -5,7 +5,7 @@ from alembic import command
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
-from app.models import JobOffer, UserProfile
+from app.models import JobOffer, LlmSettings, UserProfile
 from tests.conftest import ALEMBIC_CONFIG
 
 
@@ -60,3 +60,10 @@ def test_profile_migration_keeps_a_profile_saved_before_it(session):
     command.upgrade(ALEMBIC_CONFIG, "head")
 
     assert session.get(UserProfile, 1).looking_for == "Saved before"
+
+
+def test_the_llm_settings_exist_empty_from_the_start(session):
+    settings = session.get(LlmSettings, 1)
+
+    assert settings.provider is None
+    assert settings.model is None

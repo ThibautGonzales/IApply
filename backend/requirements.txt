@@ -4,3 +4,10 @@ alembic==1.20.*
 httpx==0.28.*
 psycopg[binary]==3.3.*
 pytest==9.*
+python-dotenv==1.2.*
+# LLM: one LangChain interface, one package per supported provider
+langchain==1.4.*
+langchain-anthropic==1.7.*
+langchain-openai==1.7.*
+langchain-google-genai==4.4.*
+langchain-mistralai==1.1.*
