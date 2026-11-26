@@ -34,7 +34,10 @@ export class Jobs implements OnInit {
     const errors = result.errors.length
       ? ` ${t('collect.errors')} ${result.errors.join(', ')}`
       : '';
-    return `${result.added} ${t('collect.newOffers')} (${result.fetched} ${t('collect.found')}).${errors}`;
+    const scoring = result.scoring_error
+      ? ` ${t('collect.notScored')} ${result.scoring_error}`
+      : ` ${result.scored} ${t('collect.scored')}`;
+    return `${result.added} ${t('collect.newOffers')} (${result.fetched} ${t('collect.found')}).${errors}${scoring}`;
   });
 
   ngOnInit(): void {

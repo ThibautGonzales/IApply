@@ -2,6 +2,7 @@
   <table>
     <thead>
       <tr>
+        <th>{{ i18n.t('table.score') }}</th>
         <th>{{ i18n.t('table.published') }}</th>
         <th>{{ i18n.t('table.title') }}</th>
         <th>{{ i18n.t('table.company') }}</th>
@@ -13,6 +14,13 @@
     <tbody>
       @for (job of jobs(); track job.id) {
         <tr>
+          <td class="score">
+            @if (job.score === null) {
+              <span [title]="i18n.t('table.notScored')">–</span>
+            } @else {
+              {{ job.score }}
+            }
+          </td>
           <td>{{ job.published_at | date: 'dd/MM/yyyy' }}</td>
           <td>
             <a [href]="job.url" target="_blank" rel="noopener">{{ job.title }}</a>
@@ -34,7 +42,7 @@
         </tr>
         @if (openedId() === job.id) {
           <tr class="offer">
-            <td colspan="6">
+            <td colspan="7">
               <app-offer-details [job]="job" (saved)="saved.emit($event)" />
             </td>
           </tr>

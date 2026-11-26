@@ -5,6 +5,8 @@ import { Observable } from 'rxjs';
 /** What the user is looking for, as returned by the backend `UserProfile`. */
 export interface UserProfile {
   looking_for: string;
+  /** Offers scored under this threshold (0-100) leave the list. */
+  min_score: number;
   updated_at: string;
 }
 
@@ -17,7 +19,10 @@ export class ProfileService {
     return this.http.get<UserProfile>('/api/profile');
   }
 
-  saveProfile(lookingFor: string): Observable<UserProfile> {
-    return this.http.put<UserProfile>('/api/profile', { looking_for: lookingFor });
+  saveProfile(lookingFor: string, minScore: number): Observable<UserProfile> {
+    return this.http.put<UserProfile>('/api/profile', {
+      looking_for: lookingFor,
+      min_score: minScore,
+    });
   }
 }

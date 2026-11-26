@@ -6,6 +6,7 @@ import { UserProfile } from './profile.service';
 
 const profile: UserProfile = {
   looking_for: 'Python backend developer, Clermont-Ferrand or remote',
+  min_score: 50,
   updated_at: '2026-11-26T13:00:00Z',
 };
 
@@ -33,17 +34,19 @@ describe('Profile', () => {
     const { compiled } = await render(profile);
 
     expect(compiled.querySelector('textarea')?.value).toBe(profile.looking_for);
+    expect(compiled.querySelector<HTMLInputElement>('input[type=number]')?.value).toBe('50');
   });
 
   it('saves the text and confirms it', async () => {
     const { fixture, compiled } = await render({ ...profile, looking_for: '' });
 
     compiled.querySelector('textarea')!.value = 'AI developer, remote';
+    compiled.querySelector<HTMLInputElement>('input[type=number]')!.value = '65';
     compiled.querySelector('button')!.click();
     const request = httpTesting.expectOne('/api/profile');
     expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toEqual({ looking_for: 'AI developer, remote' });
-    request.flush({ ...profile, looking_for: 'AI developer, remote' });
+    expect(request.request.body).toEqual({ looking_for: 'AI developer, remote', min_score: 65 });
+    request.flush({ ...profile, looking_for: 'AI developer, remote', min_score: 65 });
     fixture.detectChanges();
     await fixture.whenStable();
 

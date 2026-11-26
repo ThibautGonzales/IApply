@@ -16,6 +16,7 @@ const offer: JobOffer = {
   description: null,
   url: 'https://fr.jooble.org/desc/42',
   remote: false,
+  score: 72,
   published_at: '2026-11-23T09:00:00Z',
   collected_at: '2026-11-24T09:00:00Z',
 };
@@ -51,12 +52,14 @@ describe('Jobs', () => {
     (fixture.nativeElement as HTMLElement).querySelector('button')?.click();
     httpTesting
       .expectOne({ method: 'POST', url: '/api/jobs/collect' })
-      .flush({ fetched: 3, added: 1, errors: [] });
+      .flush({ fetched: 3, added: 1, errors: [], scored: 1, scoring_error: null });
     httpTesting.expectOne('/api/jobs').flush([offer]);
     await fixture.whenStable();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.message')?.textContent).toBe('1 new offers (3 found).');
+    expect(compiled.querySelector('.message')?.textContent).toBe(
+      '1 new offers (3 found). 1 offers scored.',
+    );
     expect(compiled.querySelectorAll('tbody tr').length).toBe(1);
   });
 
@@ -149,5 +152,37 @@ describe('Jobs', () => {
 
     expect(compiled.querySelector('textarea')).toBeNull();
     httpTesting.verify();
+  });
+
+  it('shows the score of each offer, or a dash when it is not scored yet', async () => {
+    const fixture = TestBed.createComponent(Jobs);
+    fixture.detectChanges();
+
+    httpTesting.expectOne('/api/jobs').flush([offer, { ...offer, id: 2, score: null }]);
+    await fixture.whenStable();
+
+    const scores = (fixture.nativeElement as HTMLElement).querySelectorAll('td.score');
+    expect([...scores].map((cell) => cell.textContent?.trim())).toEqual(['72', '–']);
+  });
+
+  it('says why the offers were not scored', async () => {
+    const fixture = TestBed.createComponent(Jobs);
+    fixture.detectChanges();
+    httpTesting.expectOne('/api/jobs').flush([]);
+
+    (fixture.nativeElement as HTMLElement).querySelector('button')?.click();
+    httpTesting.expectOne({ method: 'POST', url: '/api/jobs/collect' }).flush({
+      fetched: 1,
+      added: 1,
+      errors: [],
+      scored: 0,
+      scoring_error: 'Choose a provider and save an API key on the LLM page.',
+    });
+    httpTesting.expectOne('/api/jobs').flush([offer]);
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.message')?.textContent).toBe(
+      '1 new offers (1 found). Offers not scored: Choose a provider and save an API key on the LLM page.',
+    );
   });
 });
