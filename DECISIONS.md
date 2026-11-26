@@ -157,3 +157,20 @@ Architecture decisions and the reason behind each one.
 - **The row has its own migration** (`e5a7c9d1f3b4`), separate from the one creating the table: a
   migration already applied somewhere is never edited, since Alembic does not run it again.
 - **Cover letter examples are not part of the profile**: they come with `feat/coverLetter`.
+
+## 2026-11-26 — LLM settings
+
+- **The user chooses the LLM on an "LLM" page**, the same way as in MorningDevNews: four providers
+  (OpenAI, Anthropic, Google Gemini, Mistral), each with a default model (`app/llm.py`, `PROVIDERS`).
+  The user can type another model: a stronger one costs more, a smaller one runs cheaper.
+- **The API key never goes to the database.** It stays on the user's disk, in `backend/data/.env`
+  (`LLM_API_KEY`), ignored by Git and by the Docker image, and mounted in the backend container so it
+  survives a rebuild. The API never sends it back, only its last 4 characters.
+- **Not the root `.env`**: Docker Compose reads that one; the backend does not rewrite a file it does
+  not own.
+- **The provider and the model are in `llm_settings`**, one row (id 1) created by its migration,
+  like the profile. An empty model means the provider's default.
+- **The provider is guessed from the key prefix** when none is chosen (`sk-ant-`, `AIza`, `sk-`).
+  Changing provider forgets the typed model, which means nothing to another provider.
+- **A "Test" button** (`POST /llm/test`) sends a tiny prompt and shows the provider's error as it is.
+- **Tests never call a real LLM**: they use LangChain's `FakeListChatModel` and a temporary `.env`.
