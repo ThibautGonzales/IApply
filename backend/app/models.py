@@ -65,7 +65,8 @@ class Application(SQLModel, table=True):
     last_news_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
 
 
-DEFAULT_MIN_SCORE = 70
+# 50 is the line between "what I am looking for" and "not really" in the scoring prompt.
+DEFAULT_MIN_SCORE = 50
 
 
 class UserProfile(SQLModel, table=True):

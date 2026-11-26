@@ -76,5 +76,15 @@ def test_a_new_offer_has_no_score_yet(session):
     assert session.get(JobOffer, 1).score is None
 
 
-def test_the_profile_threshold_starts_at_70(session):
-    assert session.get(UserProfile, 1).min_score == 70
+def test_the_profile_threshold_starts_at_50(session):
+    assert session.get(UserProfile, 1).min_score == 50
+
+
+def test_a_profile_left_at_the_first_default_moves_to_50(session):
+    # A database that got the threshold column when its default was 70.
+    command.downgrade(ALEMBIC_CONFIG, "a7c9e1f3b5d6")
+    assert session.execute(text("SELECT min_score FROM user_profile")).scalar() == 70
+
+    command.upgrade(ALEMBIC_CONFIG, "head")
+
+    assert session.execute(text("SELECT min_score FROM user_profile")).scalar() == 50
