@@ -27,6 +27,10 @@ services:
       JOOBLE_INCLUDE_REMOTE: ${JOOBLE_INCLUDE_REMOTE:-true}
       JOOBLE_REMOTE_LOCATION: ${JOOBLE_REMOTE_LOCATION:-Télétravail}
       JOOBLE_REMOTE_KEYWORD: ${JOOBLE_REMOTE_KEYWORD:-}
+    volumes:
+      # The LLM API key lives in backend/data/.env, on your disk only (never in the database
+      # nor in the image): mounted so it survives a rebuild of the container.
+      - ./backend/data:/app/data
     ports:
       - "8000:8000"
     depends_on:

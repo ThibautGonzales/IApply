@@ -5,12 +5,25 @@ from sqlmodel import Session, col, select
 
 from app.collection import CollectionResult, collect_jobs
 from app.database import get_session, is_database_reachable
+from app.llm import (
+    PROVIDERS,
+    effective_model,
+    get_chat_model,
+    get_settings,
+    guess_provider,
+    read_api_key,
+    save_api_key,
+)
 from app.models import (
     Application,
     ApplicationWithJob,
     DescriptionChange,
     JobOffer,
+    LlmSettings,
+    LlmSettingsChange,
+    LlmSettingsView,
     ProfileChange,
+    ProviderInfo,
     StatusChange,
     UserProfile,
     utc_now,
@@ -163,3 +176,54 @@ def change_profile(change: ProfileChange, session: SessionDep) -> UserProfile:
     session.commit()
     session.refresh(profile)
     return profile
+
+
+def settings_view(settings: LlmSettings) -> LlmSettingsView:
+    key = read_api_key()
+    return LlmSettingsView(
+        provider=settings.provider,
+        model=effective_model(settings),
+        api_key_hint=f"…{key[-4:]}" if key else None,
+        providers=[ProviderInfo(id=provider_id, **info) for provider_id, info in PROVIDERS.items()],
+    )
+
+
+@app.get("/llm")
+def get_llm_settings(session: SessionDep) -> LlmSettingsView:
+    """The chosen provider and model, and whether a key is saved."""
+    return settings_view(get_settings(session))
+
+
+@app.put("/llm")
+def change_llm_settings(change: LlmSettingsChange, session: SessionDep) -> LlmSettingsView:
+    """Save the fields that were sent. The key goes to the local .env file, never to the database."""
+    settings = get_settings(session)
+    if change.api_key and change.api_key.strip():
+        api_key = change.api_key.strip()
+        save_api_key(api_key)
+        if not change.provider:
+            settings.provider = guess_provider(api_key) or settings.provider
+    if change.provider:
+        if change.provider not in PROVIDERS:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown provider")
+        if change.provider != settings.provider:
+            settings.model = None  # a model name of one provider means nothing to another
+        settings.provider = change.provider
+    if change.model is not None:
+        settings.model = change.model.strip() or None
+    session.add(settings)
+    session.commit()
+    session.refresh(settings)
+    return settings_view(settings)
+
+
+@app.post("/llm/test")
+def test_llm_settings(session: SessionDep) -> dict[str, str]:
+    """Send a tiny prompt to check that the provider, the model and the key work together."""
+    try:
+        get_chat_model(get_settings(session)).invoke("Just reply OK.")
+    except Exception as error:  # any provider error (bad key, unknown model, quota) is shown as it is
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Could not reach the model: {error}"
+        ) from error
+    return {"status": "ok"}

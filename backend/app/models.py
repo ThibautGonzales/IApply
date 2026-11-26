@@ -112,3 +112,26 @@ class ProfileChange(SQLModel):
     """Body of `PUT /profile`: what the user is looking for."""
 
     looking_for: str
+
+
+class LlmSettingsChange(SQLModel):
+    """Body of `PUT /llm`. A missing field is left unchanged; an empty model means the default one."""
+
+    provider: str | None = None
+    model: str | None = None
+    api_key: str | None = None
+
+
+class ProviderInfo(SQLModel):
+    id: str
+    label: str
+    default_model: str
+
+
+class LlmSettingsView(SQLModel):
+    """What the LLM page receives. The key itself is never sent back, only its last 4 characters."""
+
+    provider: str | None
+    model: str | None  # the model in use: the one typed, or the provider's default
+    api_key_hint: str | None
+    providers: list[ProviderInfo]
