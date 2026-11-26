@@ -168,9 +168,11 @@ def get_profile(session: SessionDep) -> UserProfile:
 
 @app.put("/profile", response_model_exclude={"id"})
 def change_profile(change: ProfileChange, session: SessionDep) -> UserProfile:
-    """Save what the user is looking for."""
+    """Save what the user is looking for and the score threshold."""
     profile = get_the_profile(session)
     profile.looking_for = change.looking_for.strip()
+    if change.min_score is not None:
+        profile.min_score = change.min_score
     profile.updated_at = utc_now()
     session.add(profile)
     session.commit()

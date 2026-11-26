@@ -33,6 +33,9 @@ class JobOffer(SQLModel, table=True):
     # Hidden offers leave the list. A flag, not a delete: a deleted offer would come back
     # at the next collection.
     hidden: bool = Field(default=False, sa_column_kwargs={"server_default": false()})
+    # Relevance from 0 to 100 given by the LLM against the user's profile. None until scored
+    # (no LLM set up yet, or the LLM failed): such an offer stays in the list.
+    score: int | None = Field(default=None)
     published_at: datetime = Field(sa_type=DateTime(timezone=True), index=True)
     collected_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
 
@@ -62,6 +65,9 @@ class Application(SQLModel, table=True):
     last_news_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
 
 
+DEFAULT_MIN_SCORE = 70
+
+
 class UserProfile(SQLModel, table=True):
     """What the user is looking for, as plain text. One user, so one row (id 1), created by a migration."""
 
@@ -70,6 +76,8 @@ class UserProfile(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     # Free text: job, technologies, location, contract... Used later to filter the offers.
     looking_for: str = Field(default="", sa_type=Text)
+    # Offers scored under this threshold leave the list. server_default fills the existing row.
+    min_score: int = Field(default=DEFAULT_MIN_SCORE, sa_column_kwargs={"server_default": str(DEFAULT_MIN_SCORE)})
     updated_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
 
 
@@ -109,9 +117,10 @@ class DescriptionChange(SQLModel):
 
 
 class ProfileChange(SQLModel):
-    """Body of `PUT /profile`: what the user is looking for."""
+    """Body of `PUT /profile`: what the user is looking for, and the score threshold (kept if missing)."""
 
     looking_for: str
+    min_score: int | None = Field(default=None, ge=0, le=100)  # out of 0-100: refused by FastAPI (422)
 
 
 class LlmSettingsChange(SQLModel):

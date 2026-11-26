@@ -67,3 +67,14 @@ def test_the_llm_settings_exist_empty_from_the_start(session):
 
     assert settings.provider is None
     assert settings.model is None
+
+
+def test_a_new_offer_has_no_score_yet(session):
+    session.add(make_offer())
+    session.commit()
+
+    assert session.get(JobOffer, 1).score is None
+
+
+def test_the_profile_threshold_starts_at_70(session):
+    assert session.get(UserProfile, 1).min_score == 70
