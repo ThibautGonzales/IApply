@@ -189,6 +189,10 @@ Architecture decisions and the reason behind each one.
   (neither hidden nor applied to). Taking longer is fine: the goal is to save the user's time.
 - **Never blocks the collection**: without an LLM, with an empty profile or on a provider error, the
   offers are saved unscored, the reason is shown, and the next collection tries again.
+- **Scores are saved after each batch**: a provider error on a later batch keeps the scores already
+  received, so they are not paid for twice.
+- **nginx waits up to 10 minutes for the API** (`proxy_read_timeout 600s`): with the scoring, a
+  collection can take minutes, and the 60 s default cut it while the backend went on.
 - **Unscored offers stay in the list, at the top**: nothing disappears without the LLM's verdict.
   Then the list goes from the highest score to the lowest, then the most recent.
 - **Batches of 20 offers per call**, one line per offer, and a **structured answer** (`OfferScores`, a

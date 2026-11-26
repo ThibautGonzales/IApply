@@ -57,6 +57,8 @@ export class Jobs implements OnInit {
       error: () => {
         this.failed.set(true);
         this.collecting.set(false);
+        // The backend may have saved offers (and scores) before the error: show them.
+        this.loadJobs();
       },
     });
   }

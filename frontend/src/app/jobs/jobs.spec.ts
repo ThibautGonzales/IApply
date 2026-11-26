@@ -185,4 +185,19 @@ describe('Jobs', () => {
       '1 new offers (1 found). Offers not scored: Choose a provider and save an API key on the LLM page.',
     );
   });
+
+  it('reloads the list even when the collection answer fails', async () => {
+    const fixture = TestBed.createComponent(Jobs);
+    fixture.detectChanges();
+    httpTesting.expectOne('/api/jobs').flush([]);
+
+    (fixture.nativeElement as HTMLElement).querySelector('button')?.click();
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/jobs/collect' })
+      .flush(null, { status: 504, statusText: 'Gateway Timeout' });
+    httpTesting.expectOne('/api/jobs').flush([offer]);
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).querySelectorAll('tbody tr').length).toBe(1);
+  });
 });
