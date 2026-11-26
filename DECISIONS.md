@@ -240,3 +240,17 @@ Architecture decisions and the reason behind each one.
   `unscored_offers()` leaves them out, so no collection scores them later. The score column shows ✎.
 - **A separate `AddOffer` component** on the offers page, which emits the saved offer (`added`): the
   offers page puts it first without reloading the list.
+
+## 2026-11-26 — Remote and on-site thresholds
+
+- **Two thresholds on the profile**: `min_score_onsite` and `min_score_remote` (0-100, 50 by default),
+  replacing `min_score`. A full remote offer can be worth less of a match (or more) than one near home.
+- **A new migration renames `min_score` to `min_score_onsite`** and copies its value into
+  `min_score_remote`, so the list does not change until the user sets them apart. The migrations
+  already applied are not edited.
+- **"Remote" means `JobOffer.remote` is true** (full remote). The column is never null, so there is
+  no unknown case: on-site, hybrid and offers whose remote status is not known use the on-site
+  threshold.
+- **One SQL `CASE` picks the threshold of each offer** (`score_threshold()` in `app/main.py`), used by
+  both `GET /jobs` and its mirror `GET /jobs/rejected`, so the two lists cannot drift apart. Unscored
+  offers (including the ones added by hand) are still never compared, and the sort is unchanged.
