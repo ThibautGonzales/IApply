@@ -120,6 +120,12 @@ class DescriptionChange(SQLModel):
     description: str
 
 
+class ManualOfferText(SQLModel):
+    """Body of `POST /jobs/manual/extract`: the offer text pasted by the user."""
+
+    text: str = Field(min_length=1)
+
+
 class ProfileChange(SQLModel):
     """Body of `PUT /profile`: what the user is looking for, and the score threshold (kept if missing)."""
 

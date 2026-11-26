@@ -15,6 +15,7 @@ from app.llm import (
     read_api_key,
     save_api_key,
 )
+from app.manual_offer import ExtractedOffer, extract_offer
 from app.models import (
     Application,
     ApplicationWithJob,
@@ -23,6 +24,7 @@ from app.models import (
     LlmSettings,
     LlmSettingsChange,
     LlmSettingsView,
+    ManualOfferText,
     ProfileChange,
     ProviderInfo,
     StatusChange,
@@ -150,6 +152,17 @@ def change_description(job_id: int, change: DescriptionChange, session: SessionD
     session.commit()
     session.refresh(job)
     return job
+
+
+@app.post("/jobs/manual/extract")
+def extract_manual_offer(pasted: ManualOfferText, session: SessionDep) -> ExtractedOffer:
+    """Read the fields of a pasted offer with the LLM. Nothing is saved: the user checks them first."""
+    try:
+        return extract_offer(get_chat_model(get_settings(session)), pasted.text)
+    except Exception as error:  # no LLM set up, or a provider error (bad key, quota...): shown as it is
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Could not read the offer: {error}"
+        ) from error
 
 
 @app.get("/applications")
