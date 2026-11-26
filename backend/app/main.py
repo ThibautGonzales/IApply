@@ -63,7 +63,7 @@ def list_jobs(session: SessionDep) -> list[JobOffer]:
     so the user sees them; then the highest scores, then the most recent.
     """
     applied_ids = select(Application.job_offer_id)
-    min_score = get_the_profile(session).min_score
+    min_score = get_the_profile(session).min_score_onsite
     query = (
         select(JobOffer)
         .where(col(JobOffer.hidden).is_(False))
@@ -89,7 +89,7 @@ def list_rejected_jobs(session: SessionDep) -> list[JobOffer]:
     """The offers left out of the list (hidden by the user, or scored under the threshold and not
     restored), published in the last week, sorted like the list. Applied offers are not rejected."""
     applied_ids = select(Application.job_offer_id)
-    min_score = get_the_profile(session).min_score
+    min_score = get_the_profile(session).min_score_onsite
     under_threshold = and_(
         col(JobOffer.score) < min_score,  # an unscored offer is never under the threshold
         col(JobOffer.restored).is_(False),
@@ -239,11 +239,13 @@ def get_profile(session: SessionDep) -> UserProfile:
 
 @app.put("/profile", response_model_exclude={"id"})
 def change_profile(change: ProfileChange, session: SessionDep) -> UserProfile:
-    """Save what the user is looking for and the score threshold."""
+    """Save what the user is looking for and the score thresholds."""
     profile = get_the_profile(session)
     profile.looking_for = change.looking_for.strip()
-    if change.min_score is not None:
-        profile.min_score = change.min_score
+    if change.min_score_onsite is not None:
+        profile.min_score_onsite = change.min_score_onsite
+    if change.min_score_remote is not None:
+        profile.min_score_remote = change.min_score_remote
     profile.updated_at = utc_now()
     session.add(profile)
     session.commit()

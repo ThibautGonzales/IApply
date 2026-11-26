@@ -133,7 +133,7 @@ def test_offers_under_the_threshold_leave_the_list(client, session):
 
 def test_the_threshold_comes_from_the_profile(client, session):
     session.add_all([scored_offer("high", 80), scored_offer("middle", 60)])
-    session.get(UserProfile, 1).min_score = 70
+    session.get(UserProfile, 1).min_score_onsite = 70
     session.commit()
 
     response = client.get("/jobs")
