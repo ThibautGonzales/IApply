@@ -93,3 +93,9 @@ class DescriptionChange(SQLModel):
     """Body of `PUT /jobs/{id}/description`: the offer text pasted by the user."""
 
     description: str
+
+
+class ProfileChange(SQLModel):
+    """Body of `PUT /profile`: what the user is looking for."""
+
+    looking_for: str

@@ -10,7 +10,9 @@ from app.models import (
     ApplicationWithJob,
     DescriptionChange,
     JobOffer,
+    ProfileChange,
     StatusChange,
+    UserProfile,
     utc_now,
 )
 from app.tracking import close_stale_applications
@@ -134,3 +136,25 @@ def change_status(application_id: int, change: StatusChange, session: SessionDep
 def got_news(application_id: int, session: SessionDep) -> ApplicationWithJob:
     """The "I got news" button: the status stays the same, but the month without news starts again."""
     return record_news(session, get_application_or_404(session, application_id))
+
+
+# There is only one user, so the profile is always the row with this id.
+PROFILE_ID = 1
+
+
+@app.get("/profile")
+def get_profile(session: SessionDep) -> UserProfile:
+    """What the user is looking for. An empty profile until the first save."""
+    return session.get(UserProfile, PROFILE_ID) or UserProfile(id=PROFILE_ID)
+
+
+@app.put("/profile")
+def change_profile(change: ProfileChange, session: SessionDep) -> UserProfile:
+    """Save what the user is looking for, creating the profile on the first save."""
+    profile = session.get(UserProfile, PROFILE_ID) or UserProfile(id=PROFILE_ID)
+    profile.looking_for = change.looking_for.strip()
+    profile.updated_at = utc_now()
+    session.add(profile)
+    session.commit()
+    session.refresh(profile)
+    return profile
