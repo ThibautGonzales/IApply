@@ -1,12 +1,13 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { I18nService } from '../core/i18n/i18n.service';
 import { TranslationKey } from '../core/i18n/translations';
+import { AddOffer } from './add-offer';
 import { JobTable } from './job-table';
 import { CollectionResult, JobOffer, JobsService } from './jobs.service';
 
 /** Collect button and the saved job offers, on-site and remote apart. */
 @Component({
-  imports: [JobTable],
+  imports: [AddOffer, JobTable],
   selector: 'app-jobs',
   templateUrl: './jobs.html',
 })
@@ -69,6 +70,11 @@ export class Jobs implements OnInit {
 
   protected apply(job: JobOffer): void {
     this.jobsService.apply(job.id).subscribe(() => this.removeFromList(job));
+  }
+
+  // An offer added by hand is never scored: it goes first, as the list sorts unscored offers first.
+  protected add(offer: JobOffer): void {
+    this.jobs.update((jobs) => [offer, ...jobs]);
   }
 
   // The saved offer comes back from the API: only its row changes.

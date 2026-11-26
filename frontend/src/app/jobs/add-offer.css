@@ -1,0 +1,27 @@
+.add-offer {
+  max-width: 60rem;
+}
+
+label {
+  display: block;
+  margin-top: 0.4rem;
+}
+
+textarea,
+input:not([type='checkbox']) {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+}
+
+.buttons {
+  margin-top: 0.6rem;
+}
+
+.buttons button + button {
+  margin-left: 0.4rem;
+}
+
+.error {
+  color: #b00020;
+}

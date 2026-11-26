@@ -65,6 +65,25 @@ describe('Jobs', () => {
     expect(compiled.querySelectorAll('tbody tr').length).toBe(1);
   });
 
+  it('puts an offer added by hand first in the list', async () => {
+    const fixture = TestBed.createComponent(Jobs);
+    fixture.detectChanges();
+    httpTesting.expectOne('/api/jobs').flush([offer]);
+    await fixture.whenStable();
+
+    const added = { ...offer, id: 2, source: 'manual', title: 'Added by hand', score: null };
+    fixture.debugElement
+      .query((node) => node.name === 'app-add-offer')
+      .triggerEventHandler('added', added);
+    await fixture.whenStable();
+
+    const titles = [...(fixture.nativeElement as HTMLElement).querySelectorAll('.on-site tbody a')];
+    expect(titles.map((link) => link.textContent)).toEqual([
+      'Added by hand',
+      'Full stack developer',
+    ]);
+  });
+
   it('hides an offer and removes it from the list', async () => {
     const fixture = TestBed.createComponent(Jobs);
     fixture.detectChanges();
