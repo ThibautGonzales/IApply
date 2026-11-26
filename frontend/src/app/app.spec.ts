@@ -55,7 +55,7 @@ describe('App', () => {
     expect(document.documentElement.lang).toBe('fr');
   });
 
-  it('shows a menu with the offers, tracking and profile pages', async () => {
+  it('shows a menu with the offers, tracking, profile and LLM pages', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -65,6 +65,7 @@ describe('App', () => {
       '/',
       '/applications',
       '/profile',
+      '/llm',
     ]);
   });
 

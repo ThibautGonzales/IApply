@@ -1,0 +1,26 @@
+label {
+  display: block;
+  margin-bottom: 0.8rem;
+  max-width: 30rem;
+}
+
+select,
+input {
+  box-sizing: border-box;
+  display: block;
+  margin-top: 0.2rem;
+  width: 100%;
+}
+
+small {
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.buttons button + button {
+  margin-left: 0.4rem;
+}
+
+.feedback.error {
+  color: #b00020;
+}

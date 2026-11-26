@@ -1,0 +1,66 @@
+<h2>{{ i18n.t('llm.title') }}</h2>
+<p>{{ i18n.t('llm.help') }}</p>
+
+@if (settings(); as settings) {
+  <label>
+    {{ i18n.t('llm.provider') }}
+    <!-- [selected] on each option rather than [value] on the select: the select's value would be
+         set before @for creates the options, and the browser would fall back to the first one. -->
+    <select (change)="onProviderChange($any($event.target).value)">
+      <option value="" [selected]="!provider()">{{ i18n.t('llm.providerGuessed') }}</option>
+      @for (p of settings.providers; track p.id) {
+        <option [value]="p.id" [selected]="p.id === provider()">{{ p.label }}</option>
+      }
+    </select>
+  </label>
+
+  <label>
+    {{ i18n.t('llm.apiKey') }}
+    <input
+      type="password"
+      autocomplete="off"
+      [value]="apiKey()"
+      (input)="apiKey.set($any($event.target).value)"
+    />
+    <small>
+      @if (settings.api_key_hint) {
+        {{ i18n.t('llm.apiKeySaved') }} {{ settings.api_key_hint }}.
+      }
+      {{ i18n.t('llm.apiKeyLocal') }}
+    </small>
+  </label>
+
+  <label>
+    {{ i18n.t('llm.model') }}
+    <input
+      type="text"
+      [value]="model()"
+      [placeholder]="defaultModel()"
+      (input)="model.set($any($event.target).value)"
+    />
+    <small>{{ i18n.t('llm.modelHelp') }}</small>
+  </label>
+
+  <div class="buttons">
+    <button type="button" class="save" (click)="save()" [disabled]="busy()">
+      {{ i18n.t('llm.save') }}
+    </button>
+    <button
+      type="button"
+      class="test"
+      (click)="test()"
+      [disabled]="busy() || !settings.api_key_hint"
+    >
+      {{ i18n.t('llm.test') }}
+    </button>
+  </div>
+}
+
+@if (feedback(); as feedback) {
+  <p class="feedback" [class.error]="feedback.error" role="status">
+    {{ i18n.t(feedback.key) }}
+    @if (feedback.detail) {
+      <br /><small>{{ feedback.detail }}</small>
+    }
+  </p>
+}
