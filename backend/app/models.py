@@ -62,6 +62,17 @@ class Application(SQLModel, table=True):
     last_news_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
 
 
+class UserProfile(SQLModel, table=True):
+    """What the user is looking for, as plain text. There is only one user, so one row (id 1)."""
+
+    __tablename__ = "user_profile"
+
+    id: int | None = Field(default=None, primary_key=True)
+    # Free text: job, technologies, location, contract... Used later to filter the offers.
+    looking_for: str = Field(default="", sa_type=Text)
+    updated_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
+
+
 class ApplicationWithJob(SQLModel):
     """What the tracking page receives: an application and its offer, in one object."""
 

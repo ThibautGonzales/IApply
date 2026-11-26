@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from app.models import JobOffer
+from app.models import JobOffer, UserProfile
 
 
 def make_offer(**overrides) -> JobOffer:
@@ -39,3 +39,12 @@ def test_same_id_from_another_source_is_accepted(session):
     session.add(make_offer())
     session.add(make_offer(source="adzuna"))
     session.commit()
+
+
+def test_user_profile_is_saved_with_update_date(session):
+    session.add(UserProfile(looking_for="Python backend developer, Lyon or remote"))
+    session.commit()
+
+    saved = session.get(UserProfile, 1)
+    assert saved.looking_for == "Python backend developer, Lyon or remote"
+    assert saved.updated_at is not None
