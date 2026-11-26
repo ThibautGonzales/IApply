@@ -141,6 +141,19 @@ def test_the_threshold_comes_from_the_profile(client, session):
     assert [job["external_id"] for job in response.json()] == ["high"]
 
 
+def test_remote_offers_have_their_own_threshold(client, session):
+    remote_ok, remote_low = scored_offer("remote-ok", 80), scored_offer("remote-low", 60)
+    remote_ok.remote = remote_low.remote = True
+    session.add_all([remote_ok, remote_low, scored_offer("onsite-ok", 40), scored_offer("onsite-low", 30)])
+    profile = session.get(UserProfile, 1)
+    profile.min_score_onsite, profile.min_score_remote = 40, 70
+    session.commit()
+
+    response = client.get("/jobs")
+
+    assert [job["external_id"] for job in response.json()] == ["remote-ok", "onsite-ok"]
+
+
 def test_unscored_offers_come_first_then_the_highest_scores(client, session):
     session.add_all([
         scored_offer("65", 65, day=23),
@@ -187,6 +200,17 @@ def test_rejected_lists_the_hidden_and_the_under_threshold_offers(client, sessio
     session.commit()
 
     assert rejected_ids(client) == ["hidden", "low"]
+
+
+def test_rejected_uses_the_threshold_of_each_offer(client, session):
+    remote_low, remote_ok = recent_offer("remote-low", 60), recent_offer("remote-ok", 80)
+    remote_low.remote = remote_ok.remote = True
+    session.add_all([remote_low, remote_ok, recent_offer("onsite-low", 30), recent_offer("onsite-ok", 40)])
+    profile = session.get(UserProfile, 1)
+    profile.min_score_onsite, profile.min_score_remote = 40, 70
+    session.commit()
+
+    assert rejected_ids(client) == ["remote-low", "onsite-low"]
 
 
 def test_rejected_leaves_out_restored_applied_and_old_offers(client, session):

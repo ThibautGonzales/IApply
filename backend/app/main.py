@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Response, status
+from sqlalchemy import case
 from sqlmodel import Session, and_, col, or_, select
 
 from app.collection import CollectionResult, collect_jobs
@@ -54,16 +55,25 @@ def collect(session: SessionDep) -> CollectionResult:
     return collect_jobs(session)
 
 
+def score_threshold(profile: UserProfile):
+    """The threshold of each offer, as a SQL expression: full remote offers have their own one."""
+    return case(
+        (col(JobOffer.remote).is_(True), profile.min_score_remote),
+        else_=profile.min_score_onsite,
+    )
+
+
 @app.get("/jobs")
 def list_jobs(session: SessionDep) -> list[JobOffer]:
     """The offers still to look at (neither hidden nor applied to), most interesting first.
 
-    Offers scored under the profile threshold are left out, unless the user restored them.
+    Offers scored under their profile threshold (remote or on-site) are left out,
+    unless the user restored them.
     Offers not scored yet come first,
     so the user sees them; then the highest scores, then the most recent.
     """
     applied_ids = select(Application.job_offer_id)
-    min_score = get_the_profile(session).min_score_onsite
+    threshold = score_threshold(get_the_profile(session))
     query = (
         select(JobOffer)
         .where(col(JobOffer.hidden).is_(False))
@@ -71,7 +81,7 @@ def list_jobs(session: SessionDep) -> list[JobOffer]:
         .where(
             or_(
                 col(JobOffer.score).is_(None),
-                col(JobOffer.score) >= min_score,
+                col(JobOffer.score) >= threshold,
                 col(JobOffer.restored).is_(True),
             )
         )
@@ -86,12 +96,12 @@ REJECTED_OFFERS_DAYS = 7
 
 @app.get("/jobs/rejected")
 def list_rejected_jobs(session: SessionDep) -> list[JobOffer]:
-    """The offers left out of the list (hidden by the user, or scored under the threshold and not
+    """The offers left out of the list (hidden by the user, or scored under their threshold and not
     restored), published in the last week, sorted like the list. Applied offers are not rejected."""
     applied_ids = select(Application.job_offer_id)
-    min_score = get_the_profile(session).min_score_onsite
+    threshold = score_threshold(get_the_profile(session))
     under_threshold = and_(
-        col(JobOffer.score) < min_score,  # an unscored offer is never under the threshold
+        col(JobOffer.score) < threshold,  # an unscored offer is never under the threshold
         col(JobOffer.restored).is_(False),
     )
     query = (
