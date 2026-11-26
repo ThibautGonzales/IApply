@@ -1,9 +1,9 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlmodel import select
 
 from app import collection
-from app.models import Application, JobOffer, UserProfile
+from app.models import Application, JobOffer, UserProfile, utc_now
 
 
 def make_offer(external_id: str, day: int) -> JobOffer:
@@ -164,3 +164,56 @@ def test_a_restored_offer_stays_in_the_list_whatever_its_score(client, session):
     response = client.get("/jobs")
 
     assert [job["external_id"] for job in response.json()] == ["restored"]
+
+
+# ---------- Rejected offers ----------
+
+
+def recent_offer(external_id: str, score: int | None = None, days_ago: int = 1) -> JobOffer:
+    """The rejected page depends on today's date, so these offers are dated from now."""
+    offer = scored_offer(external_id, score)
+    offer.published_at = utc_now() - timedelta(days=days_ago)
+    return offer
+
+
+def rejected_ids(client) -> list[str]:
+    return [job["external_id"] for job in client.get("/jobs/rejected").json()]
+
+
+def test_rejected_lists_the_hidden_and_the_under_threshold_offers(client, session):
+    hidden = recent_offer("hidden", 90)
+    hidden.hidden = True
+    session.add_all([hidden, recent_offer("low", 10), recent_offer("good", 80), recent_offer("unscored")])
+    session.commit()
+
+    assert rejected_ids(client) == ["hidden", "low"]
+
+
+def test_rejected_leaves_out_restored_applied_and_old_offers(client, session):
+    restored, applied = recent_offer("restored", 10), recent_offer("applied", 10)
+    restored.restored = True
+    session.add_all([restored, applied, recent_offer("old", 10, days_ago=8)])
+    session.commit()
+    session.add(Application(job_offer_id=applied.id))
+    session.commit()
+
+    assert rejected_ids(client) == []
+
+
+def test_restore_brings_a_hidden_or_low_score_offer_back_to_the_list(client, session):
+    hidden, low = recent_offer("hidden", 10), recent_offer("low", 10)
+    hidden.hidden = True
+    session.add_all([hidden, low])
+    session.commit()
+
+    for offer in (hidden, low):
+        assert client.post(f"/jobs/{offer.id}/restore").status_code == 204
+
+    assert rejected_ids(client) == []
+    assert sorted(job["external_id"] for job in client.get("/jobs").json()) == ["hidden", "low"]
+    session.refresh(low)
+    assert low.score == 10  # the score is kept: only the flag changes
+
+
+def test_restore_unknown_offer_returns_404(client):
+    assert client.post("/jobs/999/restore").status_code == 404
