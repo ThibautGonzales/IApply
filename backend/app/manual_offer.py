@@ -2,10 +2,18 @@
 
 The LLM reads the text and fills the offer fields. Nothing is saved here: the user checks the
 fields first, then saves the offer.
+
+These offers are never scored: the user added them, so they want to see them. Unscored, they
+stay at the top of the list, where the user handles them first.
 """
+
+from uuid import uuid4
 
 from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, Field
+from sqlmodel import Session, select
+
+from app.models import JobOffer, ManualOfferCreate, utc_now
 
 # The `source` of the offers added by hand.
 MANUAL_SOURCE = "manual"
@@ -39,3 +47,27 @@ def extract_offer(model: BaseChatModel, text: str) -> ExtractedOffer:
     """Ask the LLM for the offer fields. Same structured output as the scoring (`app/scoring.py`)."""
     extractor = model.with_structured_output(ExtractedOffer, method="json_schema")
     return extractor.invoke(extraction_prompt(text))
+
+
+class DuplicateOfferError(Exception):
+    """An offer with the same link was already added by hand."""
+
+
+def save_manual_offer(session: Session, new_offer: ManualOfferCreate) -> JobOffer:
+    """Save the offer checked by the user. The same link cannot be added twice."""
+    url = new_offer.url.strip()
+    already_added = select(JobOffer).where(JobOffer.source == MANUAL_SOURCE, JobOffer.url == url)
+    if session.exec(already_added).first() is not None:
+        raise DuplicateOfferError("This offer was already added.")
+    offer = JobOffer(
+        **new_offer.model_dump(exclude={"url", "description"}),
+        url=url,
+        description=new_offer.description.strip() or None,
+        source=MANUAL_SOURCE,
+        external_id=uuid4().hex,  # a manual offer has no id in a source: a random one keeps it unique
+        published_at=utc_now(),  # a date read in the text would not be reliable
+    )
+    session.add(offer)
+    session.commit()
+    session.refresh(offer)
+    return offer

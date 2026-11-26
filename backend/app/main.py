@@ -15,7 +15,7 @@ from app.llm import (
     read_api_key,
     save_api_key,
 )
-from app.manual_offer import ExtractedOffer, extract_offer
+from app.manual_offer import DuplicateOfferError, ExtractedOffer, extract_offer, save_manual_offer
 from app.models import (
     Application,
     ApplicationWithJob,
@@ -24,6 +24,7 @@ from app.models import (
     LlmSettings,
     LlmSettingsChange,
     LlmSettingsView,
+    ManualOfferCreate,
     ManualOfferText,
     ProfileChange,
     ProviderInfo,
@@ -163,6 +164,15 @@ def extract_manual_offer(pasted: ManualOfferText, session: SessionDep) -> Extrac
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Could not read the offer: {error}"
         ) from error
+
+
+@app.post("/jobs/manual", status_code=status.HTTP_201_CREATED)
+def add_manual_offer(new_offer: ManualOfferCreate, session: SessionDep) -> JobOffer:
+    """Save an offer added by hand, once the user has checked its fields. It is never scored."""
+    try:
+        return save_manual_offer(session, new_offer)
+    except DuplicateOfferError as error:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
 
 
 @app.get("/applications")

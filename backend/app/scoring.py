@@ -12,6 +12,7 @@ from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, Field
 from sqlmodel import Session, col, select
 
+from app.manual_offer import MANUAL_SOURCE
 from app.models import Application, JobOffer, UserProfile
 
 BATCH_SIZE = 20
@@ -93,11 +94,15 @@ class EmptyProfileError(Exception):
 
 
 def unscored_offers(session: Session) -> list[JobOffer]:
-    """The offers of the list (neither hidden nor applied to) that have no score yet."""
+    """The offers of the list (neither hidden nor applied to) that have no score yet.
+
+    Offers added by hand are left out: the user wants to see them, so they are never scored.
+    """
     applied_ids = select(Application.job_offer_id)
     query = (
         select(JobOffer)
         .where(col(JobOffer.score).is_(None))
+        .where(JobOffer.source != MANUAL_SOURCE)
         .where(col(JobOffer.hidden).is_(False))
         .where(col(JobOffer.id).not_in(applied_ids))
     )
