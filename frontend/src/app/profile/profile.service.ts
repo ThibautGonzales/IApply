@@ -4,7 +4,6 @@ import { Observable } from 'rxjs';
 
 /** What the user is looking for, as returned by the backend `UserProfile`. */
 export interface UserProfile {
-  id: number;
   looking_for: string;
   updated_at: string;
 }

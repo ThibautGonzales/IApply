@@ -5,7 +5,6 @@ import { Profile } from './profile';
 import { UserProfile } from './profile.service';
 
 const profile: UserProfile = {
-  id: 1,
   looking_for: 'Python backend developer, Clermont-Ferrand or remote',
   updated_at: '2026-11-26T13:00:00Z',
 };

@@ -41,10 +41,8 @@ def test_same_id_from_another_source_is_accepted(session):
     session.commit()
 
 
-def test_user_profile_is_saved_with_update_date(session):
-    session.add(UserProfile(looking_for="Python backend developer, Lyon or remote"))
-    session.commit()
+def test_the_profile_exists_empty_from_the_start(session):
+    profile = session.get(UserProfile, 1)
 
-    saved = session.get(UserProfile, 1)
-    assert saved.looking_for == "Python backend developer, Lyon or remote"
-    assert saved.updated_at is not None
+    assert profile.looking_for == ""
+    assert profile.updated_at is not None

@@ -138,20 +138,25 @@ def got_news(application_id: int, session: SessionDep) -> ApplicationWithJob:
     return record_news(session, get_application_or_404(session, application_id))
 
 
-# There is only one user, so the profile is always the row with this id.
+# There is only one user, so one profile: the row with this id, created by the migration.
 PROFILE_ID = 1
 
 
-@app.get("/profile")
+def get_the_profile(session: Session) -> UserProfile:
+    return session.get_one(UserProfile, PROFILE_ID)
+
+
+# The id is left out of the answers: there is only one profile, the frontend has no use for it.
+@app.get("/profile", response_model_exclude={"id"})
 def get_profile(session: SessionDep) -> UserProfile:
-    """What the user is looking for. An empty profile until the first save."""
-    return session.get(UserProfile, PROFILE_ID) or UserProfile(id=PROFILE_ID)
+    """What the user is looking for. Empty until the first save."""
+    return get_the_profile(session)
 
 
-@app.put("/profile")
+@app.put("/profile", response_model_exclude={"id"})
 def change_profile(change: ProfileChange, session: SessionDep) -> UserProfile:
-    """Save what the user is looking for, creating the profile on the first save."""
-    profile = session.get(UserProfile, PROFILE_ID) or UserProfile(id=PROFILE_ID)
+    """Save what the user is looking for."""
+    profile = get_the_profile(session)
     profile.looking_for = change.looking_for.strip()
     profile.updated_at = utc_now()
     session.add(profile)
