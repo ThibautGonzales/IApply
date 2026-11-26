@@ -63,7 +63,7 @@ class Application(SQLModel, table=True):
 
 
 class UserProfile(SQLModel, table=True):
-    """What the user is looking for, as plain text. One user, so one row (id 1), created by its migration."""
+    """What the user is looking for, as plain text. One user, so one row (id 1), created by a migration."""
 
     __tablename__ = "user_profile"
 

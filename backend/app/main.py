@@ -138,7 +138,7 @@ def got_news(application_id: int, session: SessionDep) -> ApplicationWithJob:
     return record_news(session, get_application_or_404(session, application_id))
 
 
-# There is only one user, so one profile: the row with this id, created by the migration.
+# There is only one user, so one profile: the row with this id, created by a migration.
 PROFILE_ID = 1
 
 
