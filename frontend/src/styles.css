@@ -121,6 +121,15 @@ button {
   cursor: default;
 }
 
+/* Destructive action (delete): red text until the confirmation. */
+.btn.danger {
+  color: var(--color-red);
+}
+
+.btn.danger:hover:not(:disabled) {
+  border-color: var(--color-red);
+}
+
 /* Second click of a destructive action: the button asks for confirmation. */
 .btn.confirming,
 .btn-link.confirming {
