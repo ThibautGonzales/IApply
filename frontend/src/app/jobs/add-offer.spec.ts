@@ -37,10 +37,8 @@ describe('AddOffer', () => {
     await fixture.whenStable();
   });
 
-  /** Opens the form, pastes the text and the link, and lets the LLM read the offer. */
+  /** Pastes the text and the link, and lets the LLM read the offer. */
   async function readTheOffer(): Promise<void> {
-    compiled.querySelector<HTMLButtonElement>('.open')?.click();
-    await fixture.whenStable();
     type(compiled.querySelector('.text'), PASTED_TEXT);
     type(compiled.querySelector('.url'), URL);
     await fixture.whenStable();
@@ -59,7 +57,7 @@ describe('AddOffer', () => {
     expect(compiled.querySelector<HTMLInputElement>('.salary')?.value).toBe('');
   });
 
-  it('saves the checked fields with the link and the pasted text, then closes', async () => {
+  it('saves the checked fields with the link and the pasted text', async () => {
     const added: JobOffer[] = [];
     fixture.componentInstance.added.subscribe((offer) => added.push(offer));
     await readTheOffer();
@@ -79,7 +77,15 @@ describe('AddOffer', () => {
     await fixture.whenStable();
 
     expect(added.map((offer) => offer.id)).toEqual([7]);
-    expect(compiled.querySelector('.open')).not.toBeNull();
+  });
+
+  it('asks the offers page to close the form on cancel', async () => {
+    let closed = false;
+    fixture.componentInstance.closed.subscribe(() => (closed = true));
+
+    compiled.querySelector<HTMLButtonElement>('.cancel')?.click();
+
+    expect(closed).toBe(true);
   });
 
   it('does not save an offer without a link', async () => {
@@ -96,8 +102,6 @@ describe('AddOffer', () => {
   });
 
   it("shows the API's message when the offer cannot be read", async () => {
-    compiled.querySelector<HTMLButtonElement>('.open')?.click();
-    await fixture.whenStable();
     type(compiled.querySelector('.text'), PASTED_TEXT);
     await fixture.whenStable();
 

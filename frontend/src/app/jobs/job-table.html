@@ -1,57 +1,68 @@
 @if (jobs().length) {
-  <table>
-    <thead>
-      <tr>
-        <th>{{ i18n.t('table.score') }}</th>
-        <th>{{ i18n.t('table.published') }}</th>
-        <th>{{ i18n.t('table.title') }}</th>
-        <th>{{ i18n.t('table.company') }}</th>
-        <th>{{ i18n.t('table.location') }}</th>
-        <th>{{ i18n.t('table.contract') }}</th>
-        <th>{{ i18n.t('table.actions') }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (job of jobs(); track job.id) {
+  <div class="table-card">
+    <table>
+      <thead>
         <tr>
-          <td class="score">
-            @if (job.source === 'manual') {
-              <span [title]="i18n.t('table.manual')">✎</span>
-            } @else if (job.score === null) {
-              <span [title]="i18n.t('table.notScored')">–</span>
-            } @else {
-              {{ job.score }}
-            }
-          </td>
-          <td>{{ job.published_at | date: 'dd/MM/yyyy' }}</td>
-          <td>
-            <a [href]="job.url" target="_blank" rel="noopener">{{ job.title }}</a>
-          </td>
-          <td>{{ job.company }}</td>
-          <td>{{ job.location }}</td>
-          <td>{{ job.contract_type }}</td>
-          <td class="actions">
-            <button type="button" class="apply" (click)="apply.emit(job)">
-              {{ i18n.t('actions.apply') }}
-            </button>
-            <button type="button" class="hide" (click)="hide.emit(job)">
-              {{ i18n.t('actions.hide') }}
-            </button>
-            <button type="button" class="view" (click)="toggleOffer(job)">
-              {{ openedId() === job.id ? i18n.t('offer.close') : i18n.t('offer.view') }}
-            </button>
-          </td>
+          <th>{{ i18n.t('table.score') }}</th>
+          <th>{{ i18n.t('table.published') }}</th>
+          <th>{{ i18n.t('table.titleCompany') }}</th>
+          <th>{{ i18n.t('table.location') }}</th>
+          <th>{{ i18n.t('table.contract') }}</th>
+          <th>{{ i18n.t('table.actions') }}</th>
         </tr>
-        @if (openedId() === job.id) {
-          <tr class="offer">
-            <td colspan="7">
-              <app-offer-details [job]="job" (saved)="saved.emit($event)" />
+      </thead>
+      <tbody>
+        @for (job of jobs(); track job.id) {
+          <tr>
+            <td class="score">
+              <app-score-badge [job]="job" />
+            </td>
+            <td class="muted">{{ job.published_at | date: 'dd/MM/yyyy' }}</td>
+            <td class="job-title">
+              <a [href]="job.url" target="_blank" rel="noopener">{{ job.title }}</a>
+              @if (job.company) {
+                <small>{{ job.company }}</small>
+              }
+            </td>
+            <td class="muted">{{ job.location }}</td>
+            <td class="muted">{{ job.contract_type }}</td>
+            <td>
+              <div class="actions">
+                <button type="button" class="btn btn-primary apply" (click)="apply.emit(job)">
+                  {{ i18n.t('actions.apply') }}
+                </button>
+                <div class="links">
+                  <button type="button" class="btn-link hide" (click)="hide.emit(job)">
+                    {{ i18n.t('actions.hide') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-link view"
+                    [attr.aria-expanded]="openedId() === job.id"
+                    (click)="toggleOffer(job)"
+                  >
+                    {{
+                      openedId() === job.id
+                        ? i18n.t('offer.close') + ' ↑'
+                        : i18n.t('offer.view') + ' ↓'
+                    }}
+                  </button>
+                </div>
+              </div>
             </td>
           </tr>
+          @if (openedId() === job.id) {
+            <tr class="offer">
+              <td></td>
+              <td colspan="5">
+                <app-offer-details [job]="job" (saved)="saved.emit($event)" />
+              </td>
+            </tr>
+          }
         }
-      }
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  </div>
 } @else {
-  <p>{{ i18n.t('jobs.none') }}</p>
+  <p class="empty">{{ i18n.t('jobs.none') }}</p>
 }

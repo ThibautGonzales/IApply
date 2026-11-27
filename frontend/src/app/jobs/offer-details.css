@@ -1,27 +1,35 @@
+:host {
+  display: block;
+  max-width: 54rem;
+}
+
+.summary {
+  color: var(--color-green);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
 .description {
-  max-width: 60rem;
+  line-height: 1.6;
+  margin: 0;
   white-space: pre-line; /* keeps the line breaks of the pasted text */
 }
 
-textarea {
-  box-sizing: border-box;
-  display: block;
-  max-width: 60rem;
-  width: 100%;
+.description.missing {
+  color: var(--color-muted);
 }
 
-.buttons {
-  margin-top: 0.4rem;
+.btn {
+  min-width: 9.5rem;
 }
 
-.buttons button + button {
-  margin-left: 0.4rem;
+.original {
+  font-size: 0.8rem;
+  margin-left: auto;
+  text-decoration: none;
 }
 
-.letter small {
-  margin-left: 0.6rem;
-}
-
-.error {
-  color: #b00020;
+.original:hover {
+  text-decoration: underline;
 }

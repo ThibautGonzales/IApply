@@ -7,6 +7,7 @@ import { ExtractedOffer, JobOffer, JobsService } from './jobs.service';
 /**
  * "Add an offer" on the offers page: the user pastes the text and the link of an offer found
  * elsewhere, the LLM fills in the fields, the user checks them and saves the offer.
+ * The offers page shows it when "Add an offer" is clicked in its header.
  */
 @Component({
   selector: 'app-add-offer',
@@ -17,10 +18,11 @@ export class AddOffer {
   private readonly jobsService = inject(JobsService);
   protected readonly i18n = inject(I18nService);
 
-  // Sends the saved offer so the offers page can put it in its list.
+  // Sends the saved offer so the offers page can put it in its list (and close the form).
   readonly added = output<JobOffer>();
+  // "Cancel": the offers page closes the form.
+  readonly closed = output<void>();
 
-  protected readonly opened = signal(false);
   protected readonly text = signal('');
   protected readonly url = signal('');
   // The fields read by the LLM: the form to check appears once they are there.
@@ -43,16 +45,11 @@ export class AddOffer {
     const offer = { ...fields, url, description: this.text() };
     this.call(this.jobsService.addOffer(offer), (saved) => {
       this.added.emit(saved);
-      this.close();
     });
   }
 
   protected close(): void {
-    this.opened.set(false);
-    this.text.set('');
-    this.url.set('');
-    this.extracted.set(null);
-    this.error.set(null);
+    this.closed.emit();
   }
 
   /** Shared by both buttons: disables them during the call and shows the error if it fails. */

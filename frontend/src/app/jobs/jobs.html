@@ -1,16 +1,42 @@
-<section>
-  <h2>{{ i18n.t('jobs.title') }}</h2>
-
-  <button type="button" (click)="collect()" [disabled]="collecting()">
-    {{ collecting() ? i18n.t('collect.running') : i18n.t('collect.button') }}
-  </button>
+<app-page-header
+  number="01"
+  [tagline]="adding() ? i18n.t('add.tagline') : i18n.t('jobs.tagline')"
+  [heading]="i18n.t('jobs.title')"
+  [subtitle]="adding() ? '' : i18n.t('jobs.subtitle')"
+>
+  <div class="header-buttons">
+    <button
+      type="button"
+      class="btn open"
+      [attr.aria-expanded]="adding()"
+      (click)="adding.set(!adding())"
+    >
+      {{ adding() ? '–' : '+' }} {{ i18n.t('add.open') }}
+    </button>
+    <button
+      type="button"
+      class="btn btn-primary collect"
+      (click)="collect()"
+      [disabled]="collecting()"
+    >
+      {{ collecting() ? i18n.t('collect.running') : i18n.t('collect.button') }}
+    </button>
+  </div>
   @if (message()) {
-    <p class="message">{{ message() }}</p>
+    <p class="collect-result" [class.error]="collectError()">{{ message() }}</p>
   }
+</app-page-header>
 
-  <app-add-offer (added)="add($event)" />
+@if (adding()) {
+  <app-add-offer (added)="add($event)" (closed)="adding.set(false)" />
+}
 
-  <h3>{{ i18n.t('jobs.onSite') }} ({{ onSiteJobs().length }})</h3>
+<section>
+  <div class="section-title">
+    <h2>{{ i18n.t('jobs.onSite') }}</h2>
+    <span class="count">{{ onSiteJobs().length }}</span>
+    <small class="hint">{{ i18n.t('jobs.scoreNote') }}</small>
+  </div>
   <app-job-table
     class="on-site"
     [jobs]="onSiteJobs()"
@@ -18,8 +44,13 @@
     (apply)="apply($event)"
     (saved)="replace($event)"
   />
+</section>
 
-  <h3>{{ i18n.t('jobs.remote') }} ({{ remoteJobs().length }})</h3>
+<section>
+  <div class="section-title">
+    <h2>{{ i18n.t('jobs.remote') }}</h2>
+    <span class="count">{{ remoteJobs().length }}</span>
+  </div>
   <app-job-table
     class="remote"
     [jobs]="remoteJobs()"
@@ -28,3 +59,5 @@
     (saved)="replace($event)"
   />
 </section>
+
+<p class="hint">{{ i18n.t('jobs.footer') }}</p>

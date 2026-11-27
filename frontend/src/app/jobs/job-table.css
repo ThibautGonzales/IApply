@@ -1,0 +1,47 @@
+/* Same column widths in the on-site and remote tables. */
+table {
+  min-width: 52rem;
+  table-layout: fixed;
+}
+
+th:nth-child(1) {
+  width: 5.5rem;
+}
+
+th:nth-child(2) {
+  width: 7.5rem;
+}
+
+th:nth-child(4) {
+  width: 10rem;
+}
+
+th:nth-child(5) {
+  width: 6.5rem;
+}
+
+th:nth-child(6) {
+  width: 15.5rem;
+}
+
+.actions {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+}
+
+.actions .btn {
+  min-width: 6.75rem;
+}
+
+.links {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.hide {
+  color: var(--color-muted);
+}
