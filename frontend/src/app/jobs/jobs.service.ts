@@ -78,6 +78,10 @@ export class JobsService {
     return this.http.post<void>(`/api/jobs/${jobId}/hide`, null);
   }
 
+  getJob(jobId: number): Observable<JobOffer> {
+    return this.http.get<JobOffer>(`/api/jobs/${jobId}`);
+  }
+
   changeDescription(jobId: number, description: string): Observable<JobOffer> {
     return this.http.put<JobOffer>(`/api/jobs/${jobId}/description`, { description });
   }

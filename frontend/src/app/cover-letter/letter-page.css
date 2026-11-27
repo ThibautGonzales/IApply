@@ -1,0 +1,33 @@
+section {
+  max-width: 60rem;
+}
+
+textarea {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+}
+
+.buttons {
+  margin: 0.4rem 0;
+}
+
+.buttons button + button {
+  margin-left: 0.4rem;
+}
+
+.status {
+  margin-left: 0.6rem;
+}
+
+h3 {
+  margin: 1.2rem 0 0;
+}
+
+.warning {
+  color: #8a5a00;
+}
+
+.error {
+  color: #b00020;
+}

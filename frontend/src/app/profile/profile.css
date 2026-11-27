@@ -23,6 +23,10 @@ small {
   display: block;
 }
 
+h3 {
+  margin: 1.2rem 0 0;
+}
+
 .buttons {
   margin-top: 0.4rem;
 }

@@ -6,6 +6,16 @@ from sqlalchemy import case
 from sqlmodel import Session, and_, col, or_, select
 
 from app.collection import CollectionResult, collect_jobs
+from app.cover_letter import (
+    MissingBackgroundError,
+    MissingOfferTextError,
+    RevisedLetter,
+    check_can_write,
+    generate_letter,
+    get_letter,
+    revise_letter,
+    save_letter,
+)
 from app.database import get_session, is_database_reachable
 from app.llm import (
     PROVIDERS,
@@ -20,8 +30,13 @@ from app.manual_offer import DuplicateOfferError, ExtractedOffer, extract_offer,
 from app.models import (
     Application,
     ApplicationWithJob,
+    CoverLetter,
+    CoverLetterChange,
+    CoverLetterExample,
+    CoverLetterRevision,
     DescriptionChange,
     JobOffer,
+    LetterExampleChange,
     LlmSettings,
     LlmSettingsChange,
     LlmSettingsView,
@@ -121,6 +136,12 @@ def get_job_or_404(session: Session, job_id: int) -> JobOffer:
     return job
 
 
+@app.get("/jobs/{job_id}")
+def read_job(job_id: int, session: SessionDep) -> JobOffer:
+    """One offer, for the cover letter page (opened from its own address)."""
+    return get_job_or_404(session, job_id)
+
+
 @app.post("/jobs/{job_id}/hide", status_code=status.HTTP_204_NO_CONTENT)
 def hide_job(job_id: int, session: SessionDep) -> None:
     """Remove an offer from the list. It stays in the database so a collection does not bring it back."""
@@ -183,6 +204,57 @@ def add_manual_offer(new_offer: ManualOfferCreate, session: SessionDep) -> JobOf
         return save_manual_offer(session, new_offer)
     except DuplicateOfferError as error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+
+
+def get_letter_or_404(session: Session, job: JobOffer) -> CoverLetter:
+    letter = get_letter(session, job)
+    if letter is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No cover letter for this offer yet")
+    return letter
+
+
+@app.get("/jobs/{job_id}/cover-letter")
+def read_cover_letter(job_id: int, session: SessionDep) -> CoverLetter:
+    """The letter of the offer. 404 until one is generated."""
+    return get_letter_or_404(session, get_job_or_404(session, job_id))
+
+
+@app.post("/jobs/{job_id}/cover-letter")
+def write_cover_letter(job_id: int, session: SessionDep) -> CoverLetter:
+    """Ask the LLM for a letter for the offer, and save it. Replaces the letter there was."""
+    job = get_job_or_404(session, job_id)
+    try:
+        check_can_write(session, job)  # checked first: no LLM set up is a less useful message
+    except (MissingOfferTextError, MissingBackgroundError) as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+    try:
+        return generate_letter(session, get_chat_model(get_settings(session)), job)
+    except Exception as error:  # no LLM set up, or a provider error (bad key, quota...): shown as it is
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Could not write the letter: {error}"
+        ) from error
+
+
+@app.put("/jobs/{job_id}/cover-letter")
+def change_cover_letter(job_id: int, change: CoverLetterChange, session: SessionDep) -> CoverLetter:
+    """Save the letter as changed by hand by the user."""
+    job = get_job_or_404(session, job_id)
+    get_letter_or_404(session, job)  # a letter is generated first: there is nothing to change before
+    return save_letter(session, job, change.text)
+
+
+@app.post("/jobs/{job_id}/cover-letter/revise")
+def revise_cover_letter(job_id: int, revision: CoverLetterRevision, session: SessionDep) -> RevisedLetter:
+    """Have the LLM make the asked changes, by replacing passages of the letter, and save the result."""
+    job = get_job_or_404(session, job_id)
+    get_letter_or_404(session, job)  # a letter is generated first
+    try:
+        model = get_chat_model(get_settings(session))
+        return revise_letter(session, model, job, revision.text.strip(), revision.instructions.strip())
+    except Exception as error:  # no LLM set up, or a provider error (bad key, quota...): shown as it is
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Could not change the letter: {error}"
+        ) from error
 
 
 @app.get("/applications")
@@ -249,9 +321,11 @@ def get_profile(session: SessionDep) -> UserProfile:
 
 @app.put("/profile", response_model_exclude={"id"})
 def change_profile(change: ProfileChange, session: SessionDep) -> UserProfile:
-    """Save what the user is looking for and the score thresholds."""
+    """Save what the user is looking for, their background and the score thresholds."""
     profile = get_the_profile(session)
     profile.looking_for = change.looking_for.strip()
+    if change.background is not None:
+        profile.background = change.background.strip()
     if change.min_score_onsite is not None:
         profile.min_score_onsite = change.min_score_onsite
     if change.min_score_remote is not None:
@@ -261,6 +335,46 @@ def change_profile(change: ProfileChange, session: SessionDep) -> UserProfile:
     session.commit()
     session.refresh(profile)
     return profile
+
+
+@app.get("/letter-examples")
+def list_letter_examples(session: SessionDep) -> list[CoverLetterExample]:
+    """The cover letters the user already wrote, in the order they were added."""
+    return list(session.exec(select(CoverLetterExample).order_by(col(CoverLetterExample.id))).all())
+
+
+@app.post("/letter-examples", status_code=status.HTTP_201_CREATED)
+def add_letter_example(change: LetterExampleChange, session: SessionDep) -> CoverLetterExample:
+    example = CoverLetterExample(title=change.title.strip(), text=change.text.strip())
+    session.add(example)
+    session.commit()
+    session.refresh(example)
+    return example
+
+
+def get_letter_example_or_404(session: Session, example_id: int) -> CoverLetterExample:
+    example = session.get(CoverLetterExample, example_id)
+    if example is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Letter example not found")
+    return example
+
+
+@app.put("/letter-examples/{example_id}")
+def change_letter_example(example_id: int, change: LetterExampleChange, session: SessionDep) -> CoverLetterExample:
+    example = get_letter_example_or_404(session, example_id)
+    example.title = change.title.strip()
+    example.text = change.text.strip()
+    session.add(example)
+    session.commit()
+    session.refresh(example)
+    return example
+
+
+@app.delete("/letter-examples/{example_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_letter_example(example_id: int, session: SessionDep) -> None:
+    """A real delete: an example is the user's own text, nothing brings it back like a collection would."""
+    session.delete(get_letter_example_or_404(session, example_id))
+    session.commit()
 
 
 def settings_view(settings: LlmSettings) -> LlmSettingsView:

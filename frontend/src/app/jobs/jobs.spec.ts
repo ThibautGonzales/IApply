@@ -166,6 +166,10 @@ describe('Jobs', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     compiled.querySelector<HTMLButtonElement>('tbody .view')?.click();
     await fixture.whenStable();
+    // The unfolded offer looks for its cover letter: there is none yet.
+    httpTesting
+      .expectOne('/api/jobs/1/cover-letter')
+      .flush(null, { status: 404, statusText: 'Not Found' });
     compiled.querySelector<HTMLButtonElement>('.offer .edit')?.click();
     await fixture.whenStable();
     compiled.querySelector<HTMLButtonElement>('.offer .cancel')?.click();

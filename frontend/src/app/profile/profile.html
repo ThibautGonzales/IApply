@@ -4,6 +4,7 @@
 @if (profile(); as profile) {
   <textarea
     #text
+    class="looking-for"
     rows="12"
     [value]="profile.looking_for"
     [placeholder]="i18n.t('profile.placeholder')"
@@ -35,10 +36,28 @@
     />
   </label>
   <small>{{ i18n.t('profile.minScoreHelp') }}</small>
+
+  <h3>{{ i18n.t('profile.backgroundTitle') }}</h3>
+  <p>{{ i18n.t('profile.backgroundHelp') }}</p>
+  <textarea
+    #background
+    class="background"
+    rows="16"
+    [value]="profile.background"
+    [placeholder]="i18n.t('profile.backgroundPlaceholder')"
+    (input)="saved.set(false)"
+  ></textarea>
   <div class="buttons">
     <button
       type="button"
-      (click)="save(text.value, minScoreOnsite.valueAsNumber, minScoreRemote.valueAsNumber)"
+      (click)="
+        save(
+          text.value,
+          background.value,
+          minScoreOnsite.valueAsNumber,
+          minScoreRemote.valueAsNumber
+        )
+      "
       [disabled]="saving()"
     >
       {{ i18n.t('profile.save') }}

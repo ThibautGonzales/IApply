@@ -80,10 +80,36 @@ class UserProfile(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     # Free text: job, technologies, location, contract... Used later to filter the offers.
     looking_for: str = Field(default="", sa_type=Text)
+    # Skills, career and work experience, as free text (or a pasted CV). Only used for the cover
+    # letters: the LLM must not claim anything that is not written here. server_default fills the row.
+    background: str = Field(default="", sa_type=Text, sa_column_kwargs={"server_default": ""})
     # Offers scored under their threshold leave the list: one for full remote offers, one for the
     # others (on-site or hybrid). server_default fills the existing row.
     min_score_onsite: int = Field(default=DEFAULT_MIN_SCORE, sa_column_kwargs={"server_default": str(DEFAULT_MIN_SCORE)})
     min_score_remote: int = Field(default=DEFAULT_MIN_SCORE, sa_column_kwargs={"server_default": str(DEFAULT_MIN_SCORE)})
+    updated_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
+
+
+class CoverLetterExample(SQLModel, table=True):
+    """A cover letter the user already wrote. The LLM follows their style when it writes a new one."""
+
+    __tablename__ = "cover_letter_example"
+
+    id: int | None = Field(default=None, primary_key=True)
+    title: str = Field(max_length=200)  # a short name to find it in the list, e.g. "Data engineer at Michelin"
+    text: str = Field(sa_type=Text)
+    created_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
+
+
+class CoverLetter(SQLModel, table=True):
+    """The cover letter written for an offer: by the LLM first, then changed by the user or the LLM."""
+
+    __tablename__ = "cover_letter"
+
+    id: int | None = Field(default=None, primary_key=True)
+    # unique: one letter per offer. Generating again replaces it.
+    job_offer_id: int = Field(foreign_key="job_offer.id", unique=True)
+    text: str = Field(sa_type=Text)
     updated_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
 
 
@@ -145,12 +171,36 @@ class ManualOfferCreate(SQLModel):
 
 
 class ProfileChange(SQLModel):
-    """Body of `PUT /profile`: what the user is looking for, and the score thresholds (each kept if missing)."""
+    """Body of `PUT /profile`: what the user is looking for, their background, and the score thresholds.
+
+    The background and the thresholds are kept when they are not sent.
+    """
 
     looking_for: str
+    background: str | None = None
     # Out of 0-100: refused by FastAPI (422).
     min_score_onsite: int | None = Field(default=None, ge=0, le=100)
     min_score_remote: int | None = Field(default=None, ge=0, le=100)
+
+
+class LetterExampleChange(SQLModel):
+    """Body of `POST /letter-examples` and `PUT /letter-examples/{id}`. Both fields are required."""
+
+    title: str = Field(min_length=1, max_length=200)
+    text: str = Field(min_length=1)
+
+
+class CoverLetterChange(SQLModel):
+    """Body of `PUT /jobs/{id}/cover-letter`: the letter as changed by hand by the user."""
+
+    text: str = Field(min_length=1)
+
+
+class CoverLetterRevision(SQLModel):
+    """Body of `POST /jobs/{id}/cover-letter/revise`: the letter shown on the page, and the changes to make."""
+
+    text: str = Field(min_length=1)
+    instructions: str = Field(min_length=1)
 
 
 class LlmSettingsChange(SQLModel):

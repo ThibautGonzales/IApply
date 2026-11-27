@@ -27,6 +27,22 @@ def test_list_jobs_returns_most_recent_first(client, session):
     assert response.json()[0]["url"] == "https://example.com/recent"
 
 
+def test_one_offer_can_be_read_by_its_id(client, session):
+    offer = make_offer("one", day=20)
+    session.add(offer)
+    session.commit()
+
+    response = client.get(f"/jobs/{offer.id}")
+
+    assert response.status_code == 200
+    assert response.json()["external_id"] == "one"
+    assert client.get("/jobs/999").status_code == 404
+
+
+def test_the_rejected_list_is_not_taken_for_an_offer_id(client):
+    assert client.get("/jobs/rejected").status_code == 200
+
+
 def test_collect_returns_the_collection_summary(client, monkeypatch):
     monkeypatch.setattr(collection, "SOURCES", {"fake": lambda since: [make_offer("1", day=23)]})
 
