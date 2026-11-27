@@ -55,7 +55,7 @@ describe('App', () => {
     expect(document.documentElement.lang).toBe('fr');
   });
 
-  it('shows a menu with the offers, rejected offers, tracking, profile and LLM pages', async () => {
+  it('shows a menu with the offers, rejected offers, tracking, profile, letter examples and LLM pages', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -66,6 +66,7 @@ describe('App', () => {
       '/rejected',
       '/applications',
       '/profile',
+      '/letter-examples',
       '/llm',
     ]);
   });
