@@ -4,6 +4,7 @@ import { Component, OnInit, computed, inject, input, signal } from '@angular/cor
 import { Observable } from 'rxjs';
 import { I18nService } from '../core/i18n/i18n.service';
 import { JobOffer, JobsService } from '../jobs/jobs.service';
+import { PageHeader } from '../shared/page-header/page-header';
 import { CoverLetter, CoverLetterService, Replacement } from './cover-letter.service';
 
 /**
@@ -11,7 +12,7 @@ import { CoverLetter, CoverLetterService, Replacement } from './cover-letter.ser
  * the LLM, then to copy. Opened from "View offer", once the letter is generated.
  */
 @Component({
-  imports: [DatePipe],
+  imports: [DatePipe, PageHeader],
   selector: 'app-letter-page',
   styleUrl: './letter-page.css',
   templateUrl: './letter-page.html',

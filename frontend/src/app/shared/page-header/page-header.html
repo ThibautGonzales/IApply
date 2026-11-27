@@ -1,0 +1,14 @@
+<div class="text">
+  <p class="eyebrow">{{ i18n.t('layout.personalSpace') }} / {{ number() }}</p>
+  <p class="tagline">{{ tagline() }}</p>
+  <!-- Optional extras around the title: an element marked beforeTitle or afterTitle goes there. -->
+  <ng-content select="[beforeTitle]" />
+  <h1>{{ heading() }}</h1>
+  @if (subtitle()) {
+    <p class="subtitle">{{ subtitle() }}</p>
+  }
+  <ng-content select="[afterTitle]" />
+</div>
+<div class="actions">
+  <ng-content />
+</div>

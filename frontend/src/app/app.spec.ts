@@ -51,7 +51,7 @@ describe('App', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('strong')?.textContent?.trim()).toBe('API injoignable');
-    expect(compiled.querySelector('nav a')?.textContent?.trim()).toBe('Offres');
+    expect(compiled.querySelector('nav a .label')?.textContent?.trim()).toBe("Offres d'emploi");
     expect(document.documentElement.lang).toBe('fr');
   });
 

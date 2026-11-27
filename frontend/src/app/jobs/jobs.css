@@ -1,0 +1,52 @@
+.header-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.header-buttons .btn {
+  min-width: 11rem;
+}
+
+/* Result of the last collection, under the buttons. */
+.collect-result {
+  color: var(--color-green);
+  font-size: 0.75rem;
+  margin: 1rem 0 0;
+  max-width: 25rem;
+}
+
+.collect-result::before {
+  content: '✓ ';
+}
+
+.collect-result.error {
+  color: var(--color-red);
+}
+
+.collect-result.error::before {
+  content: '! ';
+}
+
+app-add-offer {
+  display: block;
+  margin-bottom: 2.5rem;
+}
+
+section {
+  margin-bottom: 2.5rem;
+}
+
+.section-title {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-title .hint {
+  margin: 0 0 0 auto;
+}
+
+.section-title h2 {
+  white-space: nowrap;
+}

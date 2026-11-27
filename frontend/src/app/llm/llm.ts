@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { I18nService } from '../core/i18n/i18n.service';
+import { PageHeader } from '../shared/page-header/page-header';
 import { TranslationKey } from '../core/i18n/translations';
 import { LlmService, LlmSettings, LlmSettingsChange } from './llm.service';
 
@@ -14,6 +15,7 @@ interface Feedback {
 
 /** LLM page: the provider, the model and the API key used to score the offers. */
 @Component({
+  imports: [PageHeader],
   selector: 'app-llm',
   styleUrl: './llm.css',
   templateUrl: './llm.html',

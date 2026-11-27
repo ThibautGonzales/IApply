@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 
 /** A saved job offer, as returned by the backend `JobOffer` model. */
@@ -56,6 +56,9 @@ export interface ManualOffer extends ExtractedOffer {
 @Injectable({ providedIn: 'root' })
 export class JobsService {
   private readonly http = inject(HttpClient);
+
+  /** Number of offers in the list, shown in the side menu. Null until the offers page loads them. */
+  readonly count = signal<number | null>(null);
 
   getJobs(): Observable<JobOffer[]> {
     return this.http.get<JobOffer[]>('/api/jobs');

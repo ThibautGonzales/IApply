@@ -1,33 +1,52 @@
-section {
-  max-width: 60rem;
-}
-
-textarea {
-  box-sizing: border-box;
+.back {
+  color: var(--color-muted);
   display: block;
-  width: 100%;
+  margin-top: 1rem;
 }
 
-.buttons {
-  margin: 0.4rem 0;
+.job {
+  margin: 0;
 }
 
-.buttons button + button {
-  margin-left: 0.4rem;
+.job a {
+  text-decoration: none;
+}
+
+.job a:hover {
+  text-decoration: underline;
+}
+
+.text {
+  border-radius: var(--radius-large);
+  padding: 2rem 2.25rem;
+}
+
+.btn {
+  min-width: 7.5rem;
 }
 
 .status {
-  margin-left: 0.6rem;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  margin-left: 0.75rem;
 }
 
-h3 {
-  margin: 1.2rem 0 0;
+.status.unsaved {
+  color: var(--color-amber);
 }
 
-.warning {
-  color: #8a5a00;
+.ask-title {
+  margin: 4rem 0 1.25rem;
 }
 
-.error {
-  color: #b00020;
+.message.warning {
+  margin: 0 0 1.5rem;
+}
+
+.failed {
+  margin-top: 1.5rem !important;
+}
+
+.failed p {
+  margin: 0;
 }

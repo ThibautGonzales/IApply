@@ -1,12 +1,15 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { I18nService } from '../core/i18n/i18n.service';
+import { PageHeader } from '../shared/page-header/page-header';
+import { ScoreBadge } from '../shared/score-badge/score-badge';
 import { JobOffer, JobsService } from '../jobs/jobs.service';
 
 /** Rejected offers page: the offers of the last week left out of the list, each one restorable. */
 @Component({
-  imports: [DatePipe],
+  imports: [DatePipe, PageHeader, ScoreBadge],
   selector: 'app-rejected',
+  styleUrl: './rejected.css',
   templateUrl: './rejected.html',
 })
 export class Rejected implements OnInit {

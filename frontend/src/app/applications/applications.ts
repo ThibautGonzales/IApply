@@ -3,6 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { I18nService } from '../core/i18n/i18n.service';
 import { JobOffer } from '../jobs/jobs.service';
 import { OfferDetails } from '../jobs/offer-details';
+import { PageHeader } from '../shared/page-header/page-header';
 import {
   APPLICATION_STATUSES,
   Application,
@@ -12,8 +13,9 @@ import {
 
 /** Tracking page: the offers the user applied to, with their status. */
 @Component({
-  imports: [DatePipe, OfferDetails],
+  imports: [DatePipe, OfferDetails, PageHeader],
   selector: 'app-applications',
+  styleUrl: './applications.css',
   templateUrl: './applications.html',
 })
 export class Applications implements OnInit {
@@ -21,6 +23,14 @@ export class Applications implements OnInit {
   protected readonly i18n = inject(I18nService);
 
   protected readonly statuses = APPLICATION_STATUSES;
+  // Colour of each status in the list (see applications.css).
+  protected readonly statusColors: Record<ApplicationStatus, string> = {
+    waiting: 'amber',
+    interview: 'blue',
+    rejected: 'red',
+    accepted: 'green',
+    closed: 'grey',
+  };
   protected readonly applications = signal<Application[]>([]);
   // The application whose offer details are shown under its row, if any.
   protected readonly openedId = signal<number | null>(null);
@@ -29,6 +39,10 @@ export class Applications implements OnInit {
     this.applicationsService
       .getApplications()
       .subscribe((applications) => this.applications.set(applications));
+  }
+
+  protected countByStatus(status: ApplicationStatus): number {
+    return this.applications().filter((application) => application.status === status).length;
   }
 
   protected changeStatus(application: Application, status: string): void {

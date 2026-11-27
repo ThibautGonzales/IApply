@@ -51,7 +51,7 @@ describe('Jobs', () => {
     fixture.detectChanges();
     httpTesting.expectOne('/api/jobs').flush([]);
 
-    (fixture.nativeElement as HTMLElement).querySelector('button')?.click();
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.collect')?.click();
     httpTesting
       .expectOne({ method: 'POST', url: '/api/jobs/collect' })
       .flush({ fetched: 3, added: 1, errors: [], scored: 1, scoring_error: null });
@@ -59,7 +59,7 @@ describe('Jobs', () => {
     await fixture.whenStable();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.message')?.textContent).toBe(
+    expect(compiled.querySelector('.collect-result')?.textContent).toBe(
       '1 new offers (3 found). 1 offers scored.',
     );
     expect(compiled.querySelectorAll('tbody tr').length).toBe(1);
@@ -72,6 +72,8 @@ describe('Jobs', () => {
     await fixture.whenStable();
 
     const added = { ...offer, id: 2, source: 'manual', title: 'Added by hand', score: null };
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.open')?.click();
+    await fixture.whenStable();
     fixture.debugElement
       .query((node) => node.name === 'app-add-offer')
       .triggerEventHandler('added', added);
@@ -195,7 +197,7 @@ describe('Jobs', () => {
     fixture.detectChanges();
     httpTesting.expectOne('/api/jobs').flush([]);
 
-    (fixture.nativeElement as HTMLElement).querySelector('button')?.click();
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.collect')?.click();
     httpTesting.expectOne({ method: 'POST', url: '/api/jobs/collect' }).flush({
       fetched: 1,
       added: 1,
@@ -206,7 +208,9 @@ describe('Jobs', () => {
     httpTesting.expectOne('/api/jobs').flush([offer]);
     await fixture.whenStable();
 
-    expect((fixture.nativeElement as HTMLElement).querySelector('.message')?.textContent).toBe(
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('.collect-result')?.textContent,
+    ).toBe(
       '1 new offers (1 found). Offers not scored: Choose a provider and save an API key on the LLM page.',
     );
   });
@@ -216,7 +220,7 @@ describe('Jobs', () => {
     fixture.detectChanges();
     httpTesting.expectOne('/api/jobs').flush([]);
 
-    (fixture.nativeElement as HTMLElement).querySelector('button')?.click();
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.collect')?.click();
     httpTesting
       .expectOne({ method: 'POST', url: '/api/jobs/collect' })
       .flush(null, { status: 504, statusText: 'Gateway Timeout' });

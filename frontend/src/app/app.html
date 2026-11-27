@@ -1,8 +1,53 @@
-<main>
-  <header>
-    <h1>IApply</h1>
+<aside class="sidebar">
+  <a routerLink="/" class="logo">
+    <img src="logo.webp" alt="IApply" width="174" height="174" />
+  </a>
+  <p class="eyebrow">{{ i18n.t('layout.careerSpace') }}</p>
+  <nav>
+    @for (item of menu; track item.path; let index = $index) {
+      <a
+        [routerLink]="item.path"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+      >
+        <span class="number">0{{ index + 1 }}</span>
+        <span class="label">{{ i18n.t(item.label) }}</span>
+        @if (item.path === '/' && offerCount() !== null) {
+          <span class="badge-count">{{ offerCount() }}</span>
+        }
+      </a>
+    }
+  </nav>
+  <div class="pace">
+    <p class="pace-title">{{ i18n.t('layout.paceTitle') }}</p>
+    <p>{{ i18n.t('layout.paceText') }}</p>
+  </div>
+  <small class="footer">{{ i18n.t('layout.footer') }}</small>
+</aside>
+
+<div class="content">
+  <header class="topbar">
+    <p class="eyebrow breadcrumb">
+      {{ i18n.t('layout.space') }}
+      @if (pageLabel(); as label) {
+        / {{ i18n.t(label) }}
+      }
+    </p>
+    <p class="backend" [class.ok]="health()" [class.down]="unreachable()">
+      {{ i18n.t('backend.label') }}
+      <span class="dot" aria-hidden="true"></span>
+      <strong>
+        @if (health(); as health) {
+          API {{ health.status }}, {{ i18n.t('backend.database') }} {{ health.database }}
+        } @else if (unreachable()) {
+          {{ i18n.t('backend.unreachable') }}
+        } @else {
+          {{ i18n.t('backend.checking') }}
+        }
+      </strong>
+    </p>
     <div class="languages" role="group" [attr.aria-label]="i18n.t('language.label')">
-      @for (language of i18n.languages; track language; let last = $last) {
+      @for (language of i18n.languages; track language) {
         <button
           type="button"
           [class.active]="language === i18n.language()"
@@ -11,35 +56,10 @@
         >
           {{ language.toUpperCase() }}
         </button>
-        @if (!last) {
-          <span aria-hidden="true">/</span>
-        }
       }
     </div>
   </header>
-  <nav>
-    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-      {{ i18n.t('nav.jobs') }}
-    </a>
-    <a routerLink="/rejected" routerLinkActive="active">{{ i18n.t('nav.rejected') }}</a>
-    <a routerLink="/applications" routerLinkActive="active">{{ i18n.t('nav.applications') }}</a>
-    <a routerLink="/profile" routerLinkActive="active">{{ i18n.t('nav.profile') }}</a>
-    <a routerLink="/letter-examples" routerLinkActive="active">
-      {{ i18n.t('nav.letterExamples') }}
-    </a>
-    <a routerLink="/llm" routerLinkActive="active">{{ i18n.t('nav.llm') }}</a>
-  </nav>
-  <p>
-    {{ i18n.t('backend.label') }}
-    <strong>
-      @if (health(); as health) {
-        API {{ health.status }}, {{ i18n.t('backend.database') }} {{ health.database }}
-      } @else if (unreachable()) {
-        {{ i18n.t('backend.unreachable') }}
-      } @else {
-        {{ i18n.t('backend.checking') }}
-      }
-    </strong>
-  </p>
-  <router-outlet />
-</main>
+  <main>
+    <router-outlet />
+  </main>
+</div>

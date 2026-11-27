@@ -1,13 +1,33 @@
-<section>
-  <h2>{{ i18n.t('applications.title') }} ({{ applications().length }})</h2>
+<app-page-header
+  number="03"
+  [tagline]="i18n.t('applications.tagline')"
+  [heading]="i18n.t('applications.title') + ' (' + applications().length + ')'"
+  [subtitle]="i18n.t('applications.subtitle')"
+/>
 
-  @if (applications().length) {
+<div class="stats">
+  <p class="stat">
+    <span class="value">{{ applications().length }}</span>{{ i18n.t('applications.statSent') }}
+  </p>
+  <p class="stat interviews">
+    <span class="value">{{ countByStatus('interview') }}</span>{{
+      i18n.t('applications.statInterviews')
+    }}
+  </p>
+  <p class="stat">
+    <span class="value">{{ countByStatus('accepted') }}</span>{{
+      i18n.t('applications.statAccepted')
+    }}
+  </p>
+</div>
+
+@if (applications().length) {
+  <div class="table-card">
     <table>
       <thead>
         <tr>
           <th>{{ i18n.t('applications.appliedAt') }}</th>
-          <th>{{ i18n.t('table.title') }}</th>
-          <th>{{ i18n.t('table.company') }}</th>
+          <th>{{ i18n.t('table.titleCompany') }}</th>
           <th>{{ i18n.t('applications.status') }}</th>
           <th>{{ i18n.t('applications.lastNews') }}</th>
           <th>{{ i18n.t('table.actions') }}</th>
@@ -16,35 +36,59 @@
       <tbody>
         @for (application of applications(); track application.id) {
           <tr>
-            <td>{{ application.applied_at | date: 'dd/MM/yyyy' }}</td>
-            <td>
+            <td class="muted">{{ application.applied_at | date: 'dd/MM/yyyy' }}</td>
+            <td class="job-title">
               <a [href]="application.job.url" target="_blank" rel="noopener">
                 {{ application.job.title }}
               </a>
+              @if (application.job.company) {
+                <small>{{ application.job.company }}</small>
+              }
             </td>
-            <td>{{ application.job.company }}</td>
             <td>
-              <select (change)="changeStatus(application, $any($event.target).value)">
+              <!-- The list itself is the badge: its colour follows the status. -->
+              <select
+                class="status"
+                [class]="statusColors[application.status]"
+                [attr.aria-label]="i18n.t('applications.status')"
+                (change)="changeStatus(application, $any($event.target).value)"
+              >
                 @for (status of statuses; track status) {
-                  <option [value]="status" [selected]="status === application.status">
+                  <option
+                    [value]="status"
+                    [class]="statusColors[status]"
+                    [selected]="status === application.status"
+                  >
                     {{ i18n.t(`status.${status}`) }}
                   </option>
                 }
               </select>
             </td>
-            <td>{{ application.last_news_at | date: 'dd/MM/yyyy' }}</td>
-            <td class="actions">
-              <button type="button" class="news" (click)="recordNews(application)">
-                {{ i18n.t('applications.gotNews') }}
-              </button>
-              <button type="button" class="view" (click)="toggleOffer(application)">
-                {{ openedId() === application.id ? i18n.t('offer.close') : i18n.t('offer.view') }}
-              </button>
+            <td class="muted">{{ application.last_news_at | date: 'dd/MM/yyyy' }}</td>
+            <td>
+              <div class="actions">
+                <button type="button" class="btn news" (click)="recordNews(application)">
+                  {{ i18n.t('applications.gotNews') }}
+                </button>
+                <button
+                  type="button"
+                  class="btn-link view"
+                  [attr.aria-expanded]="openedId() === application.id"
+                  (click)="toggleOffer(application)"
+                >
+                  {{
+                    openedId() === application.id
+                      ? i18n.t('offer.close') + ' ↑'
+                      : i18n.t('offer.view') + ' ↓'
+                  }}
+                </button>
+              </div>
             </td>
           </tr>
           @if (openedId() === application.id) {
             <tr class="offer">
-              <td colspan="6">
+              <td></td>
+              <td colspan="4">
                 <app-offer-details
                   [job]="application.job"
                   (saved)="replaceJob(application, $event)"
@@ -55,7 +99,9 @@
         }
       </tbody>
     </table>
-  } @else {
-    <p>{{ i18n.t('applications.none') }}</p>
-  }
-</section>
+  </div>
+} @else {
+  <p class="empty">{{ i18n.t('applications.none') }}</p>
+}
+
+<p class="hint">{{ i18n.t('applications.footer') }}</p>

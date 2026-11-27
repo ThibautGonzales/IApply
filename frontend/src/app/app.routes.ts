@@ -7,14 +7,15 @@ import { Llm } from './llm/llm';
 import { Profile } from './profile/profile';
 import { Rejected } from './rejected/rejected';
 
+// `label` names the page in the top bar ("My space / Offers"): a translation key.
 export const routes: Routes = [
-  { path: '', component: Jobs },
-  { path: 'rejected', component: Rejected },
-  { path: 'applications', component: Applications },
-  { path: 'profile', component: Profile },
-  { path: 'letter-examples', component: LetterExamples },
-  { path: 'jobs/:id/letter', component: LetterPage },
-  { path: 'llm', component: Llm },
+  { path: '', component: Jobs, data: { label: 'nav.jobs' } },
+  { path: 'rejected', component: Rejected, data: { label: 'nav.rejected' } },
+  { path: 'applications', component: Applications, data: { label: 'nav.applications' } },
+  { path: 'profile', component: Profile, data: { label: 'nav.profile' } },
+  { path: 'letter-examples', component: LetterExamples, data: { label: 'nav.letterExamples' } },
+  { path: 'jobs/:id/letter', component: LetterPage, data: { label: 'letter.title' } },
+  { path: 'llm', component: Llm, data: { label: 'nav.llm' } },
   // Any unknown address goes back to the offers.
   { path: '**', redirectTo: '' },
 ];

@@ -1,26 +1,21 @@
-label {
-  display: block;
-  margin-bottom: 0.8rem;
-  max-width: 30rem;
+.card {
+  padding: 2rem 1.75rem;
 }
 
-select,
-input {
-  box-sizing: border-box;
-  display: block;
-  margin-top: 0.2rem;
-  width: 100%;
+.field {
+  margin-top: 1.75rem;
 }
 
-small {
-  display: block;
-  margin-top: 0.2rem;
+.buttons {
+  margin-top: 2rem;
 }
 
-.buttons button + button {
-  margin-left: 0.4rem;
+.buttons .btn {
+  min-width: 7rem;
 }
 
-.feedback.error {
-  color: #b00020;
+.panel ul {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  padding-left: 1rem;
 }

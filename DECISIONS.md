@@ -315,3 +315,23 @@ Cover letters are one of the main features of the app.
   rather than Jooble opening its own connection or the common collection code reading Jooble's searches.
 - **Read-only on the profile page** (`GET /profile/searches`, separate from `GET /profile` so that answer
   keeps its shape): to change them, the user rewrites what they are looking for.
+
+## 2026-11-27 — New design (from the Figma mockups)
+
+- **Hand-written CSS, no UI library**: the app has few kinds of blocks (tables, forms, buttons, badges),
+  so a library would weigh more than it saves. Colours, fonts and sizes are CSS variables at the top of
+  `src/styles.css`; the shared blocks (`.btn`, `.card`, `.panel`, `.badge`, `.message`, `.field`, tables)
+  are global classes there, and each page's own CSS only lays it out.
+- **Fonts from Google Fonts** (Lora for titles, DM Sans for text) with `display=swap`: the text shows at
+  once in a fallback font. The logo is a 6 KB WebP.
+- **Side menu and top bar in `App`**; each route names itself in the top bar through its `data.label`
+  (a translation key). **`PageHeader`** (`shared/page-header`) gives every page the same header: number,
+  tagline, title, subtitle, and the page's buttons on the right.
+- **`ScoreBadge`** (`shared/score-badge`): the score in a coloured square, shared by the offers and
+  rejected tables. Green from 50, the limit the profile page gives for "matches what you look for".
+- **The offer count of the menu** is a signal of `JobsService`, written by the offers page: no extra
+  request; it shows once the offers page has loaded the list.
+- **"Add an offer" moves to the offers page header**; the form (`AddOffer`) only reports `added` or
+  `closed`, and the page opens and closes it.
+- **Mockup 10 ("States") is not a page**: it is the reference for buttons in progress, confirmations,
+  messages and empty lists, applied on every page.

@@ -1,4 +1,4 @@
-<p>
+<p class="summary">
   {{ job().location }}
   @if (job().contract_type) {
     · {{ job().contract_type }}
@@ -16,44 +16,54 @@
     [placeholder]="i18n.t('offer.placeholder')"
   ></textarea>
   <div class="buttons">
-    <button type="button" class="save" (click)="save(text.value)" [disabled]="saving()">
+    <button
+      type="button"
+      class="btn btn-primary save"
+      (click)="save(text.value)"
+      [disabled]="saving()"
+    >
       {{ i18n.t('offer.save') }}
     </button>
-    <button type="button" class="cancel" (click)="editing.set(false)">
+    <button type="button" class="btn cancel" (click)="editing.set(false)">
       {{ i18n.t('offer.cancel') }}
     </button>
   </div>
 } @else {
-  <p class="description">{{ job().description || i18n.t('offer.noDescription') }}</p>
-  <button type="button" class="edit" (click)="editing.set(true)">
-    {{ job().description ? i18n.t('offer.edit') : i18n.t('offer.paste') }}
-  </button>
+  <p class="description" [class.missing]="!job().description">
+    {{ job().description || i18n.t('offer.noDescription') }}
+  </p>
 }
 
-<p>
-  <a [href]="job().url" target="_blank" rel="noopener">{{ i18n.t('offer.originalPosting') }}</a>
-</p>
-
 <div class="letter">
-  @if (letter() === 'ready') {
-    <button type="button" class="open-letter" (click)="openLetter()">
-      {{ i18n.t('letter.open') }}
-    </button>
-  } @else if (letter() === 'none') {
-    <!-- Without the offer text, the letter could only be generic. -->
-    <button
-      type="button"
-      class="generate"
-      [disabled]="!job().description || generating()"
-      (click)="generate()"
-    >
-      {{ generating() ? i18n.t('letter.generating') : i18n.t('letter.generate') }}
-    </button>
-    @if (!job().description) {
-      <small>{{ i18n.t('letter.needsDescription') }}</small>
+  <div class="buttons">
+    @if (letter() === 'ready') {
+      <button type="button" class="btn btn-primary open-letter" (click)="openLetter()">
+        {{ i18n.t('letter.open') }}
+      </button>
+    } @else if (letter() === 'none') {
+      <!-- Without the offer text, the letter could only be generic. -->
+      <button
+        type="button"
+        class="btn btn-primary generate"
+        [disabled]="!job().description || generating()"
+        (click)="generate()"
+      >
+        {{ generating() ? i18n.t('letter.generating') : i18n.t('letter.generate') }}
+      </button>
     }
+    @if (!editing()) {
+      <button type="button" class="btn edit" (click)="editing.set(true)">
+        {{ job().description ? i18n.t('offer.edit') : i18n.t('offer.paste') }}
+      </button>
+    }
+    <a class="original" [href]="job().url" target="_blank" rel="noopener">
+      {{ i18n.t('offer.originalPosting') }} ↗
+    </a>
+  </div>
+  @if (letter() === 'none' && !job().description) {
+    <small class="hint">{{ i18n.t('letter.needsDescription') }}</small>
   }
   @if (letterError() !== null) {
-    <p class="error">{{ i18n.t('letter.failed') }} {{ letterError() }}</p>
+    <p class="message error">{{ i18n.t('letter.failed') }} {{ letterError() }}</p>
   }
 </div>

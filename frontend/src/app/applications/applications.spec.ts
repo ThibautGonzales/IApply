@@ -56,7 +56,7 @@ describe('Applications', () => {
     expect(link?.textContent?.trim()).toBe('Full stack developer');
     expect(link?.getAttribute('href')).toBe('https://fr.jooble.org/desc/42');
     expect(compiled.querySelector('select')?.value).toBe('waiting');
-    expect(compiled.querySelector('tbody td:nth-child(5)')?.textContent).toBe('20/11/2026');
+    expect(compiled.querySelector('tbody td:nth-child(4)')?.textContent).toBe('20/11/2026');
   });
 
   it('changes the status and shows the updated application', async () => {
@@ -70,7 +70,7 @@ describe('Applications', () => {
     request.flush({ ...application, status: 'interview', last_news_at: '2026-11-25T09:00:00Z' });
     await fixture.whenStable();
 
-    expect(compiled.querySelector('tbody td:nth-child(5)')?.textContent).toBe('25/11/2026');
+    expect(compiled.querySelector('tbody td:nth-child(4)')?.textContent).toBe('25/11/2026');
   });
 
   it('records news and updates the last news date', async () => {
@@ -82,7 +82,7 @@ describe('Applications', () => {
       .flush({ ...application, last_news_at: '2026-11-25T09:00:00Z' });
     await fixture.whenStable();
 
-    expect(compiled.querySelector('tbody td:nth-child(5)')?.textContent).toBe('25/11/2026');
+    expect(compiled.querySelector('tbody td:nth-child(4)')?.textContent).toBe('25/11/2026');
   });
 
   it('shows and closes the offer details', async () => {
