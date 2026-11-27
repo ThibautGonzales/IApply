@@ -90,6 +90,22 @@ class UserProfile(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
 
 
+class JoobleSearch(SQLModel, table=True):
+    """One Jooble query of the collection, worked out by the LLM from what the user is looking for.
+
+    The whole list is replaced each time the user changes "what I am looking for".
+    """
+
+    __tablename__ = "jooble_search"
+
+    id: int | None = Field(default=None, primary_key=True)
+    keywords: str = Field(max_length=200)  # e.g. "développeur full stack"
+    # A full remote search has no place: Jooble lists those offers under its own location.
+    remote: bool = Field(default=False)
+    location: str | None = Field(default=None, max_length=200)  # e.g. "Clermont-Ferrand"
+    radius_km: int | None = Field(default=None)  # None: no radius sent
+
+
 class CoverLetterExample(SQLModel, table=True):
     """A cover letter the user already wrote. The LLM follows their style when it writes a new one."""
 
