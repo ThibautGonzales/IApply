@@ -1,5 +1,7 @@
 from datetime import UTC, date, datetime, timedelta
 
+from sqlmodel import Session
+
 from app.collection import FIRST_COLLECTION_DAYS, collect_jobs, collect_since
 from app.models import Application, JobOffer, UserProfile
 from tests.test_scoring import FakeModel, scores_of
@@ -31,7 +33,7 @@ def test_collect_saves_only_new_offers(session):
     session.commit()
     received_since = []
 
-    def fake_source(since: date) -> list[JobOffer]:
+    def fake_source(session: Session, since: date) -> list[JobOffer]:
         received_since.append(since)
         # "dup" comes back twice, as it would from two keyword searches.
         return [make_offer("already-saved"), make_offer("new"), make_offer("dup"), make_offer("dup")]
@@ -44,10 +46,10 @@ def test_collect_saves_only_new_offers(session):
 
 
 def test_a_failing_source_does_not_stop_the_others(session):
-    def broken_source(since: date) -> list[JobOffer]:
+    def broken_source(session: Session, since: date) -> list[JobOffer]:
         raise RuntimeError("quota reached")
 
-    result = collect_jobs(session, {"broken": broken_source, "fake": lambda since: [make_offer("1")]})
+    result = collect_jobs(session, {"broken": broken_source, "fake": lambda session, since: [make_offer("1")]})
 
     assert result.added == 1
     assert result.errors == ["broken: quota reached"]
@@ -62,7 +64,7 @@ def test_new_offers_are_scored_after_the_collection(session):
     describe_profile(session)
     model = FakeModel(lambda prompt: scores_of(*[(i, 70) for i in range(1, 10) if f"[{i}]" in prompt]))
 
-    result = collect_jobs(session, {"fake": lambda since: [make_offer("a"), make_offer("b")]}, model)
+    result = collect_jobs(session, {"fake": lambda session, since: [make_offer("a"), make_offer("b")]}, model)
 
     assert (result.scored, result.scoring_error) == (2, None)
     assert "Full stack and AI developer" in model.prompts[0]
@@ -101,7 +103,7 @@ def test_offers_added_by_hand_are_never_scored(session):
 def test_without_a_profile_the_offers_are_saved_but_not_scored(session):
     model = FakeModel(lambda prompt: scores_of())
 
-    result = collect_jobs(session, {"fake": lambda since: [make_offer("a")]}, model)
+    result = collect_jobs(session, {"fake": lambda session, since: [make_offer("a")]}, model)
 
     assert result.added == 1
     assert result.scored == 0
@@ -115,7 +117,7 @@ def test_a_failing_llm_does_not_fail_the_collection(session):
     def broken(prompt):
         raise RuntimeError("invalid x-api-key")
 
-    result = collect_jobs(session, {"fake": lambda since: [make_offer("a")]}, FakeModel(broken))
+    result = collect_jobs(session, {"fake": lambda session, since: [make_offer("a")]}, FakeModel(broken))
 
     assert result.added == 1
     assert result.scoring_error == "invalid x-api-key"

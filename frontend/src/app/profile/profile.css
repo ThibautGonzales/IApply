@@ -34,3 +34,15 @@ h3 {
 .saved {
   margin-left: 0.6rem;
 }
+
+.searches {
+  margin-top: 0.4rem;
+}
+
+.searches ul {
+  margin: 0.2rem 0 0;
+}
+
+.error {
+  color: #b00020;
+}

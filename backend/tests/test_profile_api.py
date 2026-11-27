@@ -1,6 +1,27 @@
+import pytest
 from sqlmodel import select
 
-from app.models import UserProfile
+from app import main
+from app.models import JoobleSearch, UserProfile
+
+
+class FakePlanner:
+    """Stands in for `plan_searches()`: one remote search per call, named after the text it got."""
+
+    def __init__(self):
+        self.calls = []
+
+    def __call__(self, model, looking_for):
+        self.calls.append(looking_for)
+        return [JoobleSearch(keywords=looking_for, remote=True)]
+
+
+@pytest.fixture(autouse=True)
+def planner(monkeypatch) -> FakePlanner:
+    planner = FakePlanner()
+    monkeypatch.setattr(main, "get_chat_model", lambda settings: None)
+    monkeypatch.setattr(main, "plan_searches", planner)
+    return planner
 
 
 def test_profile_is_empty_before_the_first_save(client):
@@ -64,3 +85,49 @@ def test_the_background_is_kept_when_it_is_not_sent(client):
     response = client.put("/profile", json={"looking_for": "Python developer"})
 
     assert response.json()["background"] == "5 years of Python"
+
+
+def test_there_are_no_searches_before_the_first_save(client):
+    assert client.get("/profile/searches").json() == []
+
+
+def test_saving_what_i_look_for_replaces_the_searches(client, planner):
+    client.put("/profile", json={"looking_for": "First version"})
+    client.put("/profile", json={"looking_for": "Second version"})
+
+    searches = client.get("/profile/searches").json()
+    assert [(s["keywords"], s["remote"]) for s in searches] == [("Second version", True)]
+    assert planner.calls == ["First version", "Second version"]
+
+
+def test_saving_the_same_text_does_not_call_the_llm_again(client, planner):
+    client.put("/profile", json={"looking_for": "AI developer"})
+
+    client.put("/profile", json={"looking_for": " AI developer ", "background": "5 years of Python"})
+
+    assert planner.calls == ["AI developer"]
+
+
+def test_an_empty_text_clears_the_searches_without_the_llm(client, planner):
+    client.put("/profile", json={"looking_for": "AI developer"})
+
+    client.put("/profile", json={"looking_for": "  "})
+
+    assert client.get("/profile/searches").json() == []
+    assert planner.calls == ["AI developer"]
+
+
+def test_nothing_is_saved_when_the_llm_fails(client, monkeypatch):
+    client.put("/profile", json={"looking_for": "AI developer"})
+
+    def failing_planner(model, looking_for):
+        raise RuntimeError("quota reached")
+
+    monkeypatch.setattr(main, "plan_searches", failing_planner)
+    response = client.put("/profile", json={"looking_for": "Python developer", "min_score_onsite": 70})
+
+    assert response.status_code == 400
+    assert "quota reached" in response.json()["detail"]
+    assert client.get("/profile").json()["looking_for"] == "AI developer"
+    assert client.get("/profile").json()["min_score_onsite"] == 50
+    assert [s["keywords"] for s in client.get("/profile/searches").json()] == ["AI developer"]

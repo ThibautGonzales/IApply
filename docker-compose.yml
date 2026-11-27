@@ -21,12 +21,6 @@ services:
       # Job sources (set them in .env, see .env.example)
       JOOBLE_API_KEY: ${JOOBLE_API_KEY:-}
       JOOBLE_HOST: ${JOOBLE_HOST:-fr.jooble.org}
-      JOOBLE_KEYWORDS: ${JOOBLE_KEYWORDS:-développeur full stack;développeur IA;GenAI}
-      JOOBLE_LOCATION: ${JOOBLE_LOCATION:-Clermont-Ferrand}
-      JOOBLE_RADIUS_KM: ${JOOBLE_RADIUS_KM:-40}
-      JOOBLE_INCLUDE_REMOTE: ${JOOBLE_INCLUDE_REMOTE:-true}
-      JOOBLE_REMOTE_LOCATION: ${JOOBLE_REMOTE_LOCATION:-Télétravail}
-      JOOBLE_REMOTE_KEYWORD: ${JOOBLE_REMOTE_KEYWORD:-}
     volumes:
       # The LLM API key lives in backend/data/.env, on your disk only (never in the database
       # nor in the image): mounted so it survives a rebuild of the container.

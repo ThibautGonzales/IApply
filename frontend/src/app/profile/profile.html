@@ -10,6 +10,28 @@
     [placeholder]="i18n.t('profile.placeholder')"
     (input)="saved.set(false)"
   ></textarea>
+  <div class="searches">
+    {{ i18n.t('profile.searchesTitle') }}
+    @if (searches().length) {
+      <ul>
+        @for (search of searches(); track search.id) {
+          <li>
+            <strong>{{ search.keywords }}</strong>
+            @if (search.remote) {
+              {{ i18n.t('profile.searchRemote') }}
+            } @else {
+              {{ i18n.t('profile.searchIn') }} {{ search.location }}
+              @if (search.radius_km !== null) {
+                ({{ search.radius_km }} km)
+              }
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <small class="no-searches">{{ i18n.t('profile.searchesNone') }}</small>
+    }
+  </div>
   <p class="thresholds">{{ i18n.t('profile.minScore') }}</p>
   <label class="threshold">
     {{ i18n.t('profile.minScoreOnsite') }}
@@ -68,4 +90,7 @@
       </span>
     }
   </div>
+  @if (error() !== null) {
+    <p class="error">{{ i18n.t('profile.failed') }} {{ error() }}</p>
+  }
 }

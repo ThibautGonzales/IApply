@@ -44,7 +44,7 @@ def test_the_rejected_list_is_not_taken_for_an_offer_id(client):
 
 
 def test_collect_returns_the_collection_summary(client, monkeypatch):
-    monkeypatch.setattr(collection, "SOURCES", {"fake": lambda since: [make_offer("1", day=23)]})
+    monkeypatch.setattr(collection, "SOURCES", {"fake": lambda session, since: [make_offer("1", day=23)]})
 
     response = client.post("/jobs/collect")
 

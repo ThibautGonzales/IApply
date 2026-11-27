@@ -4,8 +4,9 @@ import pytest
 from alembic import command
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
+from sqlmodel import select
 
-from app.models import JobOffer, LlmSettings, UserProfile
+from app.models import JobOffer, JoobleSearch, LlmSettings, UserProfile
 from tests.conftest import ALEMBIC_CONFIG
 
 
@@ -102,3 +103,13 @@ def test_the_old_threshold_is_copied_to_both_new_ones(session):
 
     thresholds = session.execute(text("SELECT min_score_onsite, min_score_remote FROM user_profile")).one()
     assert tuple(thresholds) == (65, 65)
+
+
+def test_a_jooble_search_is_saved_local_or_remote(session):
+    session.add(JoobleSearch(keywords="développeur full stack", location="Clermont-Ferrand", radius_km=40))
+    session.add(JoobleSearch(keywords="développeur IA", remote=True))
+    session.commit()
+
+    local, remote = session.exec(select(JoobleSearch).order_by(JoobleSearch.id)).all()
+    assert (local.location, local.radius_km, local.remote) == ("Clermont-Ferrand", 40, False)
+    assert (remote.location, remote.radius_km, remote.remote) == (None, None, True)

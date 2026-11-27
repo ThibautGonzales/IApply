@@ -35,7 +35,7 @@ def collect_jobs(
     result = CollectionResult()
     for name, fetch_jobs in (sources or SOURCES).items():
         try:
-            offers = fetch_jobs(collect_since(session, name))
+            offers = fetch_jobs(session, collect_since(session, name))
         except Exception as error:
             result.errors.append(f"{name}: {error}")
             continue
