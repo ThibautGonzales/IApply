@@ -24,14 +24,14 @@ th:nth-child(5) {
 }
 
 .restore {
-  justify-content: center;
   white-space: nowrap;
   width: 100%;
 }
 
 .second-chance {
   background: var(--color-panel);
-  margin-top: 2rem;
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.5rem;
 }
 
 .second-chance h3 {

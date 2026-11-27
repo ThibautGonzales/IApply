@@ -48,12 +48,28 @@ th:nth-child(5) {
   width: 16rem;
 }
 
-/* The status list looks like a coloured badge. */
+/* The status list looks like a coloured badge, with a chevron of the same colour. */
 select.status {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    right 1rem center,
+    right 0.7rem center;
+  background-repeat: no-repeat;
+  background-size: 0.3rem 0.3rem;
   border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
   font-size: 0.8rem;
   font-weight: 600;
-  padding: 0.45rem 0.65rem;
+  padding: 0.45rem 2rem 0.45rem 0.9rem;
+}
+
+/* The opened list: each status in its own colour. */
+option {
+  font-weight: 600;
 }
 
 .amber {
@@ -89,7 +105,6 @@ select.status {
 }
 
 .actions .btn {
-  justify-content: center;
   width: 100%;
 }
 

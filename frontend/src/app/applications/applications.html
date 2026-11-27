@@ -54,7 +54,11 @@
                 (change)="changeStatus(application, $any($event.target).value)"
               >
                 @for (status of statuses; track status) {
-                  <option [value]="status" [selected]="status === application.status">
+                  <option
+                    [value]="status"
+                    [class]="statusColors[status]"
+                    [selected]="status === application.status"
+                  >
                     {{ i18n.t(`status.${status}`) }}
                   </option>
                 }

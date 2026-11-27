@@ -28,26 +28,26 @@
             <td class="muted">{{ job.contract_type }}</td>
             <td>
               <div class="actions">
-                <button type="button" class="btn btn-primary apply" (click)="apply.emit(job)">
-                  {{ i18n.t('actions.apply') }}
-                </button>
-                <div class="links">
-                  <button type="button" class="btn-link hide" (click)="hide.emit(job)">
+                <div class="action-buttons">
+                  <button type="button" class="btn btn-primary apply" (click)="apply.emit(job)">
+                    {{ i18n.t('actions.apply') }}
+                  </button>
+                  <button type="button" class="btn hide" (click)="hide.emit(job)">
                     {{ i18n.t('actions.hide') }}
                   </button>
-                  <button
-                    type="button"
-                    class="btn-link view"
-                    [attr.aria-expanded]="openedId() === job.id"
-                    (click)="toggleOffer(job)"
-                  >
-                    {{
-                      openedId() === job.id
-                        ? i18n.t('offer.close') + ' ↑'
-                        : i18n.t('offer.view') + ' ↓'
-                    }}
-                  </button>
                 </div>
+                <button
+                  type="button"
+                  class="btn-link view"
+                  [attr.aria-expanded]="openedId() === job.id"
+                  (click)="toggleOffer(job)"
+                >
+                  {{
+                    openedId() === job.id
+                      ? i18n.t('offer.close') + ' ↑'
+                      : i18n.t('offer.view') + ' ↓'
+                  }}
+                </button>
               </div>
             </td>
           </tr>

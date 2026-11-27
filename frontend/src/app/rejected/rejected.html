@@ -7,6 +7,11 @@
   <span class="badge green">{{ i18n.t('rejected.period') }}</span>
 </app-page-header>
 
+<div class="panel second-chance">
+  <h3>{{ i18n.t('rejected.footerTitle') }}</h3>
+  <p>{{ i18n.t('rejected.footerText') }}</p>
+</div>
+
 @if (jobs().length) {
   <div class="table-card">
     <table>
@@ -51,8 +56,3 @@
 } @else {
   <p class="empty">{{ i18n.t('rejected.none') }}</p>
 }
-
-<div class="panel second-chance">
-  <h3>{{ i18n.t('rejected.footerTitle') }}</h3>
-  <p>{{ i18n.t('rejected.footerText') }}</p>
-</div>

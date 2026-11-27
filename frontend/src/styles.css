@@ -94,6 +94,8 @@ button {
   font-size: 0.85rem;
   font-weight: 600;
   gap: 0.4rem;
+  /* Centred: a wide button with its text on the left looks unfinished. */
+  justify-content: center;
   min-height: 2.4rem;
   padding: 0.45rem 1rem;
 }

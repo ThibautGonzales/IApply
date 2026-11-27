@@ -21,27 +21,21 @@ th:nth-child(5) {
 }
 
 th:nth-child(6) {
-  width: 15.5rem;
+  width: 15rem;
 }
 
 .actions {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-}
-
-.actions .btn {
-  min-width: 6.75rem;
-}
-
-.links {
   align-items: flex-start;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  white-space: nowrap;
+  gap: 0.4rem;
 }
 
-.hide {
-  color: var(--color-muted);
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.apply {
+  white-space: nowrap;
 }
