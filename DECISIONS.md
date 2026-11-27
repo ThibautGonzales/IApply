@@ -124,7 +124,7 @@ Architecture decisions and the reason behind each one.
 5. `feat/offerScoring`: LLM score against the profile, only relevant offers shown (done, see
    "LLM settings" and "Offer scoring" below).
 6. `feat/manualOffer`: paste an offer, the LLM fills its fields (done, see "Offers added by hand" below).
-7. `feat/coverLetter`: cover letter generation.
+7. `feat/coverLetter`: cover letter generation (done, see "Cover letters" below).
 8. Later: search settings screen, a second job API.
 9. Later: a "Suggest" button: the LLM proposes Jooble keywords from the profile, kept generic
    on purpose (the scoring does the real sorting), and the user corrects them.
@@ -157,7 +157,7 @@ Architecture decisions and the reason behind each one.
   take none and leave it out of their answer.
 - **The row has its own migration** (`e5a7c9d1f3b4`), separate from the one creating the table: a
   migration already applied somewhere is never edited, since Alembic does not run it again.
-- **Cover letter examples are not part of the profile**: they come with `feat/coverLetter`.
+- **Cover letter examples are not part of the profile**: they come with `feat/coverLetter` (see "Cover letters").
 
 ## 2026-11-26 — LLM settings
 
@@ -254,3 +254,38 @@ Architecture decisions and the reason behind each one.
 - **One SQL `CASE` picks the threshold of each offer** (`score_threshold()` in `app/main.py`), used by
   both `GET /jobs` and its mirror `GET /jobs/rejected`, so the two lists cannot drift apart. Unscored
   offers (including the ones added by hand) are still never compared, and the sort is unchanged.
+
+## 2026-11-27 — Cover letters
+
+Cover letters are one of the main features of the app.
+
+- **"My background" on the profile** (`UserProfile.background`): skills, career, work experience, as free
+  text or a pasted CV. Only used for the letters; the scoring still uses `looking_for` only.
+- **The letter examples have their own table** (`CoverLetterExample`: title, text) and their own page,
+  "Letter examples", with add, edit and delete. The user plans 5 to 10 letters, too many for a section of
+  the profile page. The title is only for the user: the LLM gets the texts only.
+- **Deleting an example is a real delete**, unlike offers: it is the user's own text, nothing brings it
+  back. The page asks for a second click instead of a browser `confirm()`.
+- **What the examples say about the user is true, like the background**: the LLM follows their style and
+  reuses their facts (skills, jobs, projects, results). Only what they say about the companies they were
+  written for is not reused. It never claims a fact found neither in the background nor in the examples.
+- **No letter without the offer text** (the button is greyed out): from a title alone, the letter could only
+  be generic. Nor without a background *and* without any example: the LLM would have nothing true to say.
+  Both are checked before any LLM call.
+- **One letter per offer, in its own `CoverLetter` table** (unique `job_offer_id`), like `Application`. Writing
+  a new letter replaces the text. The letter stays after applying, from the tracking page.
+- **The letter is written in the language of the offer, as plain text**: one call, the whole answer is the
+  letter, so no structured output. `answer.text` joins the parts some providers send as a list.
+- **The letter has its own page** (`/jobs/:id/letter`), opened from "View offer": edit by hand (free), copy,
+  ask the LLM for changes, or write a new letter (two clicks, it replaces everything). The page warns that
+  many LLM requests can quickly cost money.
+- **The LLM changes a letter with replacements, never by writing it again**: output tokens are the expensive
+  ones. It answers a structured list of `{old, new}` (`LetterChanges`, `method="json_schema"` like the
+  scoring), in one call, with no tools: tools would mean several calls and far more output tokens.
+- **Our code applies the replacements** (`apply_replacements()`, a pure function, tested without LLM). A
+  replacement whose `old` is missing, empty or found several times fails and changes nothing: replacing at
+  the wrong place would be worse. The others are applied and saved; the failed ones are listed on the page.
+- **The page sends the text it shows** with the instructions, so changes made by hand and not saved yet are
+  not lost. The context is the same as for writing (profile, examples, offer) plus the letter.
+- **`GET /jobs/{id}`** was added for the letter page, which can be opened from its own address.
+- **The router gives `:id` to the page as an input** (`withComponentInputBinding()`), without `ActivatedRoute`.
