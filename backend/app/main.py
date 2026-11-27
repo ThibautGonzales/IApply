@@ -6,6 +6,14 @@ from sqlalchemy import case
 from sqlmodel import Session, and_, col, or_, select
 
 from app.collection import CollectionResult, collect_jobs
+from app.cover_letter import (
+    MissingBackgroundError,
+    MissingOfferTextError,
+    check_can_write,
+    generate_letter,
+    get_letter,
+    save_letter,
+)
 from app.database import get_session, is_database_reachable
 from app.llm import (
     PROVIDERS,
@@ -20,6 +28,8 @@ from app.manual_offer import DuplicateOfferError, ExtractedOffer, extract_offer,
 from app.models import (
     Application,
     ApplicationWithJob,
+    CoverLetter,
+    CoverLetterChange,
     CoverLetterExample,
     DescriptionChange,
     JobOffer,
@@ -185,6 +195,43 @@ def add_manual_offer(new_offer: ManualOfferCreate, session: SessionDep) -> JobOf
         return save_manual_offer(session, new_offer)
     except DuplicateOfferError as error:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+
+
+def get_letter_or_404(session: Session, job: JobOffer) -> CoverLetter:
+    letter = get_letter(session, job)
+    if letter is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No cover letter for this offer yet")
+    return letter
+
+
+@app.get("/jobs/{job_id}/cover-letter")
+def read_cover_letter(job_id: int, session: SessionDep) -> CoverLetter:
+    """The letter of the offer. 404 until one is generated."""
+    return get_letter_or_404(session, get_job_or_404(session, job_id))
+
+
+@app.post("/jobs/{job_id}/cover-letter")
+def write_cover_letter(job_id: int, session: SessionDep) -> CoverLetter:
+    """Ask the LLM for a letter for the offer, and save it. Replaces the letter there was."""
+    job = get_job_or_404(session, job_id)
+    try:
+        check_can_write(session, job)  # checked first: no LLM set up is a less useful message
+    except (MissingOfferTextError, MissingBackgroundError) as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+    try:
+        return generate_letter(session, get_chat_model(get_settings(session)), job)
+    except Exception as error:  # no LLM set up, or a provider error (bad key, quota...): shown as it is
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Could not write the letter: {error}"
+        ) from error
+
+
+@app.put("/jobs/{job_id}/cover-letter")
+def change_cover_letter(job_id: int, change: CoverLetterChange, session: SessionDep) -> CoverLetter:
+    """Save the letter as changed by hand by the user."""
+    job = get_job_or_404(session, job_id)
+    get_letter_or_404(session, job)  # a letter is generated first: there is nothing to change before
+    return save_letter(session, job, change.text)
 
 
 @app.get("/applications")

@@ -101,6 +101,18 @@ class CoverLetterExample(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
 
 
+class CoverLetter(SQLModel, table=True):
+    """The cover letter written for an offer: by the LLM first, then changed by the user or the LLM."""
+
+    __tablename__ = "cover_letter"
+
+    id: int | None = Field(default=None, primary_key=True)
+    # unique: one letter per offer. Generating again replaces it.
+    job_offer_id: int = Field(foreign_key="job_offer.id", unique=True)
+    text: str = Field(sa_type=Text)
+    updated_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
+
+
 class LlmSettings(SQLModel, table=True):
     """The LLM chosen on the LLM page. One row (id 1), created by a migration.
 
@@ -175,6 +187,12 @@ class LetterExampleChange(SQLModel):
     """Body of `POST /letter-examples` and `PUT /letter-examples/{id}`. Both fields are required."""
 
     title: str = Field(min_length=1, max_length=200)
+    text: str = Field(min_length=1)
+
+
+class CoverLetterChange(SQLModel):
+    """Body of `PUT /jobs/{id}/cover-letter`: the letter as changed by hand by the user."""
+
     text: str = Field(min_length=1)
 
 
