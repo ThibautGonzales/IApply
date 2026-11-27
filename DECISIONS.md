@@ -38,7 +38,8 @@ Architecture decisions and the reason behind each one.
   considered but its free tier is limited to test calls (£12/month after). Jooble is free
   (100 calls/day) and aggregates many French job boards. Adzuna or France Travail can be
   added later as extra sources.
-- **Sources are plain modules exposing `fetch_jobs(since) -> list[JobOffer]`**, registered
+- **Sources are plain modules exposing `fetch_jobs(session, since) -> list[JobOffer]`** (the
+  session was added with "Jooble searches worked out by the LLM"), registered
   in `app/sources/__init__.py` (`SOURCES`). Simpler than an abstract class while there is
   one source.
 - **"Since the last collection" = day of the most recent saved offer** of that source
@@ -47,7 +48,7 @@ Architecture decisions and the reason behind each one.
 - **Jooble's date filter is not trusted**: it can return months-old offers, so older offers
   are dropped in our code.
 - **Search settings are environment variables** (`JOOBLE_*` in `.env`) until a settings
-  screen exists. Remote offers are a second search per keyword with the location
+  screen exists (replaced on 2026-11-27, see "Jooble searches worked out by the LLM"). Remote offers are a second search per keyword with the location
   "Télétravail" (`JOOBLE_INCLUDE_REMOTE`), and stored with `remote = true`.
 - **Migrations run at backend startup** (`alembic upgrade head` in the Dockerfile), and
   tests build their database with the same migrations.
@@ -125,9 +126,9 @@ Architecture decisions and the reason behind each one.
    "LLM settings" and "Offer scoring" below).
 6. `feat/manualOffer`: paste an offer, the LLM fills its fields (done, see "Offers added by hand" below).
 7. `feat/coverLetter`: cover letter generation (done, see "Cover letters" below).
-8. Later: search settings screen, a second job API.
-9. Later: a "Suggest" button: the LLM proposes Jooble keywords from the profile, kept generic
-   on purpose (the scoring does the real sorting), and the user corrects them.
+8. Later: a second job API.
+9. `feat/llmJoobleSearches`: the LLM works out the Jooble searches from the profile (done, see
+   "Jooble searches worked out by the LLM" below). It replaces the search settings screen.
 
 ## 2026-11-25 — Full offer text
 
@@ -151,7 +152,8 @@ Architecture decisions and the reason behind each one.
   about the technologies, so matching a CV against them would not help.
 - **The profile filters the offers, it does not drive the Jooble search.** The search keeps its
   `JOOBLE_*` settings in `.env`. A later "Suggest" button may propose keywords from the profile
-  (roadmap item 9).
+  (roadmap item 9). (Replaced on 2026-11-27: the profile now drives the search, see "Jooble searches
+  worked out by the LLM".)
 - **One user, so one row (id 1), created empty by a migration**: the profile always exists, and the
   routes only read and update it. The id stays inside the backend: `GET /profile` and `PUT /profile`
   take none and leave it out of their answer.
@@ -289,3 +291,27 @@ Cover letters are one of the main features of the app.
   not lost. The context is the same as for writing (profile, examples, offer) plus the letter.
 - **`GET /jobs/{id}`** was added for the letter page, which can be opened from its own address.
 - **The router gives `:id` to the page as an input** (`withComponentInputBinding()`), without `ActivatedRoute`.
+
+## 2026-11-27 — Jooble searches worked out by the LLM
+
+- **The LLM works out the Jooble searches from "What I am looking for" only**, not from the background:
+  the job, the place and remote are written there. `JOOBLE_KEYWORDS`, `JOOBLE_LOCATION`,
+  `JOOBLE_RADIUS_KM`, `JOOBLE_INCLUDE_REMOTE`, `JOOBLE_REMOTE_LOCATION` and `JOOBLE_REMOTE_KEYWORD` are
+  gone; `.env` keeps only `JOOBLE_API_KEY` and `JOOBLE_HOST`. Without an LLM, there is no search: the app
+  is LLM-assisted by design.
+- **Worked out when the profile is saved, not at each collection**: one LLM call, stable searches, and the
+  user sees them on the profile page. Only when "What I am looking for" changes (or there are no searches
+  yet for a text): saving the background or a threshold costs no LLM call. An empty text clears them.
+- **If the LLM fails, nothing is saved** (`PUT /profile` answers 400 with the reason): the profile and its
+  searches always go together, in one commit, and the text stays in the box to try again.
+- **Each search is complete**: keywords, and either a place with a radius or full remote
+  (`JoobleSearch` table, `PlannedSearches` structured output, `method="json_schema"` like the scoring).
+  More flexible than shared keywords with one place, e.g. one job searched remote only.
+- **At most 6 searches** (`MAX_SEARCHES`), cut in our code, not only asked in the prompt: each search costs
+  up to 5 calls of the 100 a day of the free key. A remote search loses any place the LLM gives.
+- **The LLM does not know Jooble's "Télétravail" location**: it says "remote", `jooble.search_body()`
+  turns it into that location (`REMOTE_LOCATION`).
+- **Sources get the session** (`fetch_jobs(session, since)`) to read their settings from the database,
+  rather than Jooble opening its own connection or the common collection code reading Jooble's searches.
+- **Read-only on the profile page** (`GET /profile/searches`, separate from `GET /profile` so that answer
+  keeps its shape): to change them, the user rewrites what they are looking for.
