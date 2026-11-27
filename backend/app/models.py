@@ -80,6 +80,9 @@ class UserProfile(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     # Free text: job, technologies, location, contract... Used later to filter the offers.
     looking_for: str = Field(default="", sa_type=Text)
+    # Skills, career and work experience, as free text (or a pasted CV). Only used for the cover
+    # letters: the LLM must not claim anything that is not written here. server_default fills the row.
+    background: str = Field(default="", sa_type=Text, sa_column_kwargs={"server_default": ""})
     # Offers scored under their threshold leave the list: one for full remote offers, one for the
     # others (on-site or hybrid). server_default fills the existing row.
     min_score_onsite: int = Field(default=DEFAULT_MIN_SCORE, sa_column_kwargs={"server_default": str(DEFAULT_MIN_SCORE)})
@@ -145,9 +148,13 @@ class ManualOfferCreate(SQLModel):
 
 
 class ProfileChange(SQLModel):
-    """Body of `PUT /profile`: what the user is looking for, and the score thresholds (each kept if missing)."""
+    """Body of `PUT /profile`: what the user is looking for, their background, and the score thresholds.
+
+    The background and the thresholds are kept when they are not sent.
+    """
 
     looking_for: str
+    background: str | None = None
     # Out of 0-100: refused by FastAPI (422).
     min_score_onsite: int | None = Field(default=None, ge=0, le=100)
     min_score_remote: int | None = Field(default=None, ge=0, le=100)

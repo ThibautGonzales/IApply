@@ -44,3 +44,23 @@ def test_a_threshold_outside_0_to_100_is_refused(client):
         response = client.put("/profile", json={"looking_for": "AI developer", field: 101})
 
         assert response.status_code == 422
+
+
+def test_the_background_is_empty_before_the_first_save(client):
+    assert client.get("/profile").json()["background"] == ""
+
+
+def test_the_background_is_saved_with_the_profile(client):
+    body = {"looking_for": "AI developer", "background": "  5 years of Python at Michelin  "}
+    response = client.put("/profile", json=body)
+
+    assert response.json()["background"] == "5 years of Python at Michelin"
+    assert client.get("/profile").json()["background"] == "5 years of Python at Michelin"
+
+
+def test_the_background_is_kept_when_it_is_not_sent(client):
+    client.put("/profile", json={"looking_for": "AI developer", "background": "5 years of Python"})
+
+    response = client.put("/profile", json={"looking_for": "Python developer"})
+
+    assert response.json()["background"] == "5 years of Python"

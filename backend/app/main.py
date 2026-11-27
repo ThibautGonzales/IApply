@@ -249,9 +249,11 @@ def get_profile(session: SessionDep) -> UserProfile:
 
 @app.put("/profile", response_model_exclude={"id"})
 def change_profile(change: ProfileChange, session: SessionDep) -> UserProfile:
-    """Save what the user is looking for and the score thresholds."""
+    """Save what the user is looking for, their background and the score thresholds."""
     profile = get_the_profile(session)
     profile.looking_for = change.looking_for.strip()
+    if change.background is not None:
+        profile.background = change.background.strip()
     if change.min_score_onsite is not None:
         profile.min_score_onsite = change.min_score_onsite
     if change.min_score_remote is not None:
