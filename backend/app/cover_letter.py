@@ -3,10 +3,15 @@
 The LLM gets what the user wrote about themselves (background, what they look for), the letters
 they already wrote (their style, and more true facts about them) and the offer text. It answers with the letter as plain
 text, in one call: no structured output, the whole answer is the letter.
+
+To change a letter, the LLM never writes it again (output tokens are the expensive ones): it
+answers with a structured list of replacements, "replace this exact text with that one", and our
+code applies them. One call each time, no tools.
 """
 
 from langchain_core.language_models import BaseChatModel
-from sqlmodel import Session, col, select
+from pydantic import BaseModel, Field
+from sqlmodel import Session, SQLModel, col, select
 
 from app.models import CoverLetter, CoverLetterExample, JobOffer, UserProfile, utc_now
 
@@ -19,7 +24,19 @@ class MissingBackgroundError(Exception):
     """No background and no letter example: the LLM would have nothing true to say about the user."""
 
 
-# ---------- Prompt ----------
+# ---------- What the LLM must answer to change a letter (validated by LangChain's structured output) ----------
+
+
+class Replacement(BaseModel):
+    old: str = Field(description="A passage copied exactly from the letter, found only once in it")
+    new: str = Field(description="The text that takes its place, empty to delete the passage")
+
+
+class LetterChanges(BaseModel):
+    replacements: list[Replacement]
+
+
+# ---------- Prompts ----------
 
 
 def describe_offer(offer: JobOffer) -> str:
@@ -59,6 +76,25 @@ def generation_prompt(profile: UserProfile, examples: list[CoverLetterExample], 
         "Write the letter in the language of the offer. Answer with the text of the letter only, as\n"
         "plain text ready to paste: no Markdown, no comment before or after it. When a detail is not\n"
         "known (the recruiter's name, an address), leave it out rather than inventing it."
+    )
+
+
+def revision_prompt(
+    profile: UserProfile, examples: list[CoverLetterExample], offer: JobOffer, letter: str, instructions: str
+) -> str:
+    return (
+        "You wrote a cover letter for a job seeker, for the job offer below. They ask for changes.\n\n"
+        f"{letter_context(profile, examples, offer)}\n\n"
+        "The letter as it is now:\n"
+        f"{letter}\n\n"
+        "The changes they ask for:\n"
+        f"{instructions}\n\n"
+        "Do not write the letter again: answer only with the replacements that make these changes.\n"
+        "- `old` is copied exactly from the letter, character for character, and is found only once\n"
+        "  in it. Keep it short: just enough words to be unique.\n"
+        "- `new` takes its place. To delete a passage, `new` is empty. To add a sentence, replace a\n"
+        "  nearby passage with itself plus the new sentence.\n"
+        "- Change nothing else than what they ask for."
     )
 
 
@@ -103,3 +139,41 @@ def generate_letter(session: Session, model: BaseChatModel, offer: JobOffer) -> 
     answer = model.invoke(generation_prompt(profile, examples, offer))
     # .text joins the text parts of the answer: some providers send a list of parts, not a string.
     return save_letter(session, offer, answer.text)
+
+
+# ---------- Changing a letter ----------
+
+
+def apply_replacements(text: str, replacements: list[Replacement]) -> tuple[str, list[Replacement]]:
+    """Apply the replacements in order. Return the new text and the replacements that failed.
+
+    A replacement fails when its `old` is not in the text, or is found several times: replacing at
+    the wrong place would be worse than not replacing.
+    """
+    failed = []
+    for replacement in replacements:
+        if replacement.old and text.count(replacement.old) == 1:
+            text = text.replace(replacement.old, replacement.new)
+        else:
+            failed.append(replacement)
+    return text, failed
+
+
+class RevisedLetter(SQLModel):
+    """What `POST /jobs/{id}/cover-letter/revise` returns: the saved letter, and what could not be changed."""
+
+    letter: CoverLetter
+    failed: list[Replacement]
+
+
+def revise_letter(session: Session, model: BaseChatModel, offer: JobOffer, text: str, instructions: str) -> RevisedLetter:
+    """Ask the LLM for the replacements that make the changes, apply them to `text` and save the result.
+
+    `text` is the letter shown on the page: it may hold changes made by hand, not saved yet.
+    """
+    profile = session.get_one(UserProfile, 1)
+    examples = list(session.exec(select(CoverLetterExample).order_by(col(CoverLetterExample.id))).all())
+    reviser = model.with_structured_output(LetterChanges, method="json_schema")  # same as the scoring
+    changes = reviser.invoke(revision_prompt(profile, examples, offer, text, instructions))
+    new_text, failed = apply_replacements(text, changes.replacements)
+    return RevisedLetter(letter=save_letter(session, offer, new_text), failed=failed)

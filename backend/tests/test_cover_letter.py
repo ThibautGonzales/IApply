@@ -1,9 +1,10 @@
 from datetime import UTC, datetime
 
 from langchain_core.language_models import FakeListChatModel
+from langchain_core.runnables import RunnableLambda
 
 from app import main
-from app.cover_letter import generation_prompt
+from app.cover_letter import LetterChanges, Replacement, apply_replacements, generation_prompt
 from app.models import CoverLetterExample, JobOffer, UserProfile
 
 LETTER = "Madame, Monsieur,\n\nVotre offre de développeur Python..."
@@ -163,3 +164,88 @@ def test_a_letter_cannot_be_changed_before_it_is_generated(client, session):
     offer = make_offer(session)
 
     assert client.put(f"/jobs/{offer.id}/cover-letter", json={"text": "My own version"}).status_code == 404
+
+
+# ---------- Changing a letter ----------
+
+
+class FakeReviser:
+    """Stands in for the LLM when a letter is changed: records each prompt, answers the given replacements."""
+
+    def __init__(self, replacements: list[Replacement]):
+        self.prompts = []
+        self.replacements = replacements
+
+    def with_structured_output(self, schema, method):
+        assert schema is LetterChanges
+        assert method == "json_schema"
+
+        def reply(prompt: str) -> LetterChanges:
+            self.prompts.append(prompt)
+            return LetterChanges(replacements=self.replacements)
+
+        return RunnableLambda(reply)
+
+
+def test_replacements_found_once_are_applied_in_order():
+    text, failed = apply_replacements(
+        "I like Python. I like Java.",
+        [Replacement(old="Python", new="Go"), Replacement(old="Go.", new="Go and Rust.")],
+    )
+
+    assert (text, failed) == ("I like Go and Rust. I like Java.", [])
+
+
+def test_a_replacement_not_found_or_found_twice_fails_and_changes_nothing():
+    missing = Replacement(old="Kotlin", new="Rust")
+    twice = Replacement(old="I like", new="I love")
+    empty = Replacement(old="", new="Hello")
+
+    text, failed = apply_replacements("I like Python. I like Java.", [missing, twice, empty])
+
+    assert (text, failed) == ("I like Python. I like Java.", [missing, twice, empty])
+
+
+def test_an_empty_new_text_deletes_the_passage():
+    text, _ = apply_replacements("Hello. Useless sentence. Bye.", [Replacement(old=" Useless sentence.", new="")])
+
+    assert text == "Hello. Bye."
+
+
+def make_letter(client, session, monkeypatch) -> JobOffer:
+    fill_profile(session)
+    offer = make_offer(session)
+    fake_llm(monkeypatch, "Old letter")
+    client.post(f"/jobs/{offer.id}/cover-letter")
+    return offer
+
+
+def test_the_revise_route_applies_the_changes_to_the_page_text_and_saves_it(client, session, monkeypatch):
+    offer = make_letter(client, session, monkeypatch)
+    reviser = FakeReviser([Replacement(old="Python", new="Go"), Replacement(old="Kotlin", new="Rust")])
+    monkeypatch.setattr(main, "get_chat_model", lambda settings: reviser)
+
+    # The page sends its own text: here changed by hand ("Old" became "My") and not saved yet.
+    body = {"text": "My letter about Python", "instructions": "Talk about Go instead"}
+    response = client.post(f"/jobs/{offer.id}/cover-letter/revise", json=body)
+
+    assert response.status_code == 200
+    assert response.json()["letter"]["text"] == "My letter about Go"
+    assert response.json()["failed"] == [{"old": "Kotlin", "new": "Rust"}]
+    assert client.get(f"/jobs/{offer.id}/cover-letter").json()["text"] == "My letter about Go"
+    for expected in ["My letter about Python", "Talk about Go instead", "5 ans de Python chez Michelin", "Acme"]:
+        assert expected in reviser.prompts[0]
+
+
+def test_a_letter_cannot_be_revised_before_it_is_generated(client, session):
+    offer = make_offer(session)
+
+    body = {"text": "A letter", "instructions": "Shorter"}
+    assert client.post(f"/jobs/{offer.id}/cover-letter/revise", json=body).status_code == 404
+
+
+def test_revising_without_instructions_is_refused(client, session, monkeypatch):
+    offer = make_letter(client, session, monkeypatch)
+
+    body = {"text": "A letter", "instructions": ""}
+    assert client.post(f"/jobs/{offer.id}/cover-letter/revise", json=body).status_code == 422

@@ -9,9 +9,11 @@ from app.collection import CollectionResult, collect_jobs
 from app.cover_letter import (
     MissingBackgroundError,
     MissingOfferTextError,
+    RevisedLetter,
     check_can_write,
     generate_letter,
     get_letter,
+    revise_letter,
     save_letter,
 )
 from app.database import get_session, is_database_reachable
@@ -31,6 +33,7 @@ from app.models import (
     CoverLetter,
     CoverLetterChange,
     CoverLetterExample,
+    CoverLetterRevision,
     DescriptionChange,
     JobOffer,
     LetterExampleChange,
@@ -232,6 +235,20 @@ def change_cover_letter(job_id: int, change: CoverLetterChange, session: Session
     job = get_job_or_404(session, job_id)
     get_letter_or_404(session, job)  # a letter is generated first: there is nothing to change before
     return save_letter(session, job, change.text)
+
+
+@app.post("/jobs/{job_id}/cover-letter/revise")
+def revise_cover_letter(job_id: int, revision: CoverLetterRevision, session: SessionDep) -> RevisedLetter:
+    """Have the LLM make the asked changes, by replacing passages of the letter, and save the result."""
+    job = get_job_or_404(session, job_id)
+    get_letter_or_404(session, job)  # a letter is generated first
+    try:
+        model = get_chat_model(get_settings(session))
+        return revise_letter(session, model, job, revision.text.strip(), revision.instructions.strip())
+    except Exception as error:  # no LLM set up, or a provider error (bad key, quota...): shown as it is
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Could not change the letter: {error}"
+        ) from error
 
 
 @app.get("/applications")

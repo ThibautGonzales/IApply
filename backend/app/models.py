@@ -196,6 +196,13 @@ class CoverLetterChange(SQLModel):
     text: str = Field(min_length=1)
 
 
+class CoverLetterRevision(SQLModel):
+    """Body of `POST /jobs/{id}/cover-letter/revise`: the letter shown on the page, and the changes to make."""
+
+    text: str = Field(min_length=1)
+    instructions: str = Field(min_length=1)
+
+
 class LlmSettingsChange(SQLModel):
     """Body of `PUT /llm`. A missing field is left unchanged; an empty model means the default one."""
 
