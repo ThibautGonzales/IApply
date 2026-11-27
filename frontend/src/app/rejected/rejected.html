@@ -1,15 +1,20 @@
-<section>
-  <h2>{{ i18n.t('rejected.title') }} ({{ jobs().length }})</h2>
-  <p>{{ i18n.t('rejected.help') }}</p>
+<app-page-header
+  number="02"
+  [tagline]="i18n.t('rejected.tagline')"
+  [heading]="i18n.t('rejected.title') + ' (' + jobs().length + ')'"
+  [subtitle]="i18n.t('rejected.help')"
+>
+  <span class="badge green">{{ i18n.t('rejected.period') }}</span>
+</app-page-header>
 
-  @if (jobs().length) {
+@if (jobs().length) {
+  <div class="table-card">
     <table>
       <thead>
         <tr>
           <th>{{ i18n.t('table.score') }}</th>
           <th>{{ i18n.t('table.published') }}</th>
-          <th>{{ i18n.t('table.title') }}</th>
-          <th>{{ i18n.t('table.company') }}</th>
+          <th>{{ i18n.t('table.titleCompany') }}</th>
           <th>{{ i18n.t('rejected.reason') }}</th>
           <th>{{ i18n.t('table.actions') }}</th>
         </tr>
@@ -18,23 +23,23 @@
         @for (job of jobs(); track job.id) {
           <tr>
             <td class="score">
-              @if (job.score === null) {
-                <span [title]="i18n.t('table.notScored')">–</span>
-              } @else {
-                {{ job.score }}
+              <app-score-badge [job]="job" />
+            </td>
+            <td class="muted">{{ job.published_at | date: 'dd/MM/yyyy' }}</td>
+            <td class="job-title">
+              <a [href]="job.url" target="_blank" rel="noopener">{{ job.title }}</a>
+              @if (job.company) {
+                <small>{{ job.company }}</small>
               }
             </td>
-            <td>{{ job.published_at | date: 'dd/MM/yyyy' }}</td>
-            <td>
-              <a [href]="job.url" target="_blank" rel="noopener">{{ job.title }}</a>
-            </td>
-            <td>{{ job.company }}</td>
             <!-- The API sends both kinds: hidden ones, and the others are under the threshold. -->
-            <td class="reason">
-              {{ job.hidden ? i18n.t('rejected.hidden') : i18n.t('rejected.lowScore') }}
+            <td>
+              <span class="badge reason" [class]="job.hidden ? 'grey' : 'amber'">
+                {{ job.hidden ? i18n.t('rejected.hidden') : i18n.t('rejected.lowScore') }}
+              </span>
             </td>
-            <td class="actions">
-              <button type="button" class="restore" (click)="restore(job)">
+            <td>
+              <button type="button" class="btn restore" (click)="restore(job)">
                 {{ i18n.t('rejected.restore') }}
               </button>
             </td>
@@ -42,7 +47,12 @@
         }
       </tbody>
     </table>
-  } @else {
-    <p>{{ i18n.t('rejected.none') }}</p>
-  }
-</section>
+  </div>
+} @else {
+  <p class="empty">{{ i18n.t('rejected.none') }}</p>
+}
+
+<div class="panel second-chance">
+  <h3>{{ i18n.t('rejected.footerTitle') }}</h3>
+  <p>{{ i18n.t('rejected.footerText') }}</p>
+</div>
