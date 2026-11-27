@@ -1,64 +1,74 @@
-<section>
-  <h2>{{ i18n.t('examples.title') }} ({{ examples().length }})</h2>
-  <p>{{ i18n.t('examples.help') }}</p>
+<app-page-header
+  number="05"
+  [tagline]="i18n.t('examples.tagline')"
+  [heading]="i18n.t('examples.title') + ' (' + examples().length + ')'"
+  [subtitle]="i18n.t('examples.help')"
+/>
 
-  @if (editing() === 'new') {
-    <ng-container *ngTemplateOutlet="form; context: { $implicit: null }" />
-  } @else {
-    <button type="button" class="add" (click)="edit('new')">{{ i18n.t('examples.add') }}</button>
-  }
+@if (editing() === 'new') {
+  <ng-container *ngTemplateOutlet="form; context: { $implicit: null }" />
+} @else {
+  <button type="button" class="btn btn-primary add" (click)="edit('new')">
+    + {{ i18n.t('examples.add') }}
+  </button>
+}
 
+<div class="list">
   @for (example of examples(); track example.id) {
-    <article>
-      @if (editing() === example.id) {
-        <ng-container *ngTemplateOutlet="form; context: { $implicit: example }" />
-      } @else {
+    @if (editing() === example.id) {
+      <ng-container *ngTemplateOutlet="form; context: { $implicit: example }" />
+    } @else {
+      <article class="card example">
         <h3>{{ example.title }}</h3>
-        <div class="buttons">
-          <button type="button" class="edit" (click)="edit(example.id)">
-            {{ i18n.t('examples.edit') }}
-          </button>
-          <button type="button" class="delete" (click)="delete(example)">
-            {{
-              confirmingDelete() === example.id
-                ? i18n.t('examples.confirmDelete')
-                : i18n.t('examples.delete')
-            }}
-          </button>
-        </div>
-      }
-    </article>
+        <button type="button" class="btn edit" (click)="edit(example.id)">
+          {{ i18n.t('examples.edit') }}
+        </button>
+        <button
+          type="button"
+          class="btn-link danger delete"
+          [class.confirming]="confirmingDelete() === example.id"
+          (click)="delete(example)"
+        >
+          {{
+            confirmingDelete() === example.id
+              ? i18n.t('examples.confirmDelete')
+              : i18n.t('examples.delete')
+          }}
+        </button>
+      </article>
+    }
   } @empty {
-    <p>{{ i18n.t('examples.none') }}</p>
+    <p class="empty">{{ i18n.t('examples.none') }}</p>
   }
-</section>
+</div>
 
 <!-- One form for both cases: empty for a new example, filled for an existing one. -->
 <ng-template #form let-example>
-  <div class="form">
-    <label>
-      {{ i18n.t('examples.titleField') }}
+  <div class="card form">
+    <h2>{{ example ? i18n.t('examples.editTitle') : i18n.t('examples.newTitle') }}</h2>
+    <label class="field">
+      <span>{{ i18n.t('examples.titleField') }}</span>
       <input #title class="title" maxlength="200" [value]="example?.title ?? ''" />
     </label>
-    <label>
-      {{ i18n.t('examples.textField') }}
+    <label class="field">
+      <span>{{ i18n.t('examples.textField') }}</span>
       <textarea #text class="text" rows="18" [value]="example?.text ?? ''"></textarea>
     </label>
     <div class="buttons">
       <button
         type="button"
-        class="save"
+        class="btn btn-primary save"
         [disabled]="saving()"
         (click)="save({ title: title.value.trim(), text: text.value.trim() })"
       >
         {{ i18n.t('examples.save') }}
       </button>
-      <button type="button" class="cancel" (click)="edit(null)">
+      <button type="button" class="btn cancel" (click)="edit(null)">
         {{ i18n.t('examples.cancel') }}
       </button>
     </div>
     @if (missingField()) {
-      <p class="error">{{ i18n.t('examples.missingField') }}</p>
+      <p class="message error">{{ i18n.t('examples.missingField') }}</p>
     }
   </div>
 </ng-template>

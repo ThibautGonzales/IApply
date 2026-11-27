@@ -1,70 +1,88 @@
-<h2>{{ i18n.t('profile.title') }}</h2>
-<p>{{ i18n.t('profile.help') }}</p>
+<app-page-header
+  number="04"
+  [tagline]="i18n.t('profile.tagline')"
+  [heading]="i18n.t('profile.title')"
+  [subtitle]="i18n.t('profile.subtitle')"
+/>
 
 @if (profile(); as profile) {
-  <textarea
-    #text
-    class="looking-for"
-    rows="12"
-    [value]="profile.looking_for"
-    [placeholder]="i18n.t('profile.placeholder')"
-    (input)="saved.set(false)"
-  ></textarea>
-  <div class="searches">
-    {{ i18n.t('profile.searchesTitle') }}
-    @if (searches().length) {
-      <ul>
-        @for (search of searches(); track search.id) {
-          <li>
-            <strong>{{ search.keywords }}</strong>
-            @if (search.remote) {
-              {{ i18n.t('profile.searchRemote') }}
-            } @else {
-              {{ i18n.t('profile.searchIn') }} {{ search.location }}
-              @if (search.radius_km !== null) {
-                ({{ search.radius_km }} km)
-              }
-            }
-          </li>
-        }
-      </ul>
-    } @else {
-      <small class="no-searches">{{ i18n.t('profile.searchesNone') }}</small>
-    }
+  <h2 class="numbered"><span>01</span>{{ i18n.t('profile.lookingForTitle') }}</h2>
+  <p class="help">{{ i18n.t('profile.help') }}</p>
+  <div class="with-aside">
+    <textarea
+      #text
+      class="looking-for"
+      rows="12"
+      [attr.aria-label]="i18n.t('profile.lookingForTitle')"
+      [value]="profile.looking_for"
+      [placeholder]="i18n.t('profile.placeholder')"
+      (input)="saved.set(false)"
+    ></textarea>
+    <aside class="panel green searches">
+      <p class="eyebrow">{{ i18n.t('profile.searchesEyebrow') }}</p>
+      <h3>{{ i18n.t('profile.searchesTitle') }}</h3>
+      @if (searches().length) {
+        <ul>
+          @for (search of searches(); track search.id) {
+            <li>
+              <strong>{{ search.keywords }}</strong>
+              <small>
+                @if (search.remote) {
+                  {{ i18n.t('profile.searchRemote') }}
+                } @else {
+                  {{ i18n.t('profile.searchIn') }} {{ search.location }}
+                  @if (search.radius_km !== null) {
+                    ({{ search.radius_km }} km)
+                  }
+                }
+              </small>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="no-searches">{{ i18n.t('profile.searchesNone') }}</p>
+      }
+    </aside>
   </div>
-  <p class="thresholds">{{ i18n.t('profile.minScore') }}</p>
-  <label class="threshold">
-    {{ i18n.t('profile.minScoreOnsite') }}
-    <input
-      #minScoreOnsite
-      class="onsite"
-      type="number"
-      min="0"
-      max="100"
-      [value]="profile.min_score_onsite"
-      (input)="saved.set(false)"
-    />
-  </label>
-  <label class="threshold">
-    {{ i18n.t('profile.minScoreRemote') }}
-    <input
-      #minScoreRemote
-      class="remote"
-      type="number"
-      min="0"
-      max="100"
-      [value]="profile.min_score_remote"
-      (input)="saved.set(false)"
-    />
-  </label>
-  <small>{{ i18n.t('profile.minScoreHelp') }}</small>
 
-  <h3>{{ i18n.t('profile.backgroundTitle') }}</h3>
-  <p>{{ i18n.t('profile.backgroundHelp') }}</p>
+  <div class="panel thresholds">
+    <h3>{{ i18n.t('profile.minScore') }}</h3>
+    <div class="threshold-fields">
+      <label class="field">
+        <span>{{ i18n.t('profile.minScoreOnsite') }}</span>
+        <input
+          #minScoreOnsite
+          class="onsite"
+          type="number"
+          min="0"
+          max="100"
+          [value]="profile.min_score_onsite"
+          (input)="saved.set(false)"
+        />
+      </label>
+      <label class="field">
+        <span>{{ i18n.t('profile.minScoreRemote') }}</span>
+        <input
+          #minScoreRemote
+          class="remote"
+          type="number"
+          min="0"
+          max="100"
+          [value]="profile.min_score_remote"
+          (input)="saved.set(false)"
+        />
+      </label>
+    </div>
+    <small class="hint">{{ i18n.t('profile.minScoreHelp') }}</small>
+  </div>
+
+  <h2 class="numbered"><span>02</span>{{ i18n.t('profile.backgroundTitle') }}</h2>
+  <p class="help">{{ i18n.t('profile.backgroundHelp') }}</p>
   <textarea
     #background
     class="background"
     rows="16"
+    [attr.aria-label]="i18n.t('profile.backgroundTitle')"
     [value]="profile.background"
     [placeholder]="i18n.t('profile.backgroundPlaceholder')"
     (input)="saved.set(false)"
@@ -72,6 +90,7 @@
   <div class="buttons">
     <button
       type="button"
+      class="btn btn-primary save"
       (click)="
         save(
           text.value,
@@ -86,11 +105,11 @@
     </button>
     @if (saved()) {
       <span class="saved">
-        {{ i18n.t('profile.saved') }} {{ profile.updated_at | date: 'short' }}
+        ✓ {{ i18n.t('profile.saved') }} {{ profile.updated_at | date: 'short' }}
       </span>
     }
   </div>
   @if (error() !== null) {
-    <p class="error">{{ i18n.t('profile.failed') }} {{ error() }}</p>
+    <p class="message error">{{ i18n.t('profile.failed') }} {{ error() }}</p>
   }
 }

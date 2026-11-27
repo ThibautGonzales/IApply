@@ -1,36 +1,44 @@
-section {
-  max-width: 60rem;
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1.75rem;
 }
 
-article {
-  border-bottom: 1px solid #ddd;
-  padding: 0.4rem 0;
+.example {
+  align-items: center;
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.9rem 1.25rem;
 }
 
-h3 {
-  margin: 0.4rem 0;
+.example h3 {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 
-label {
-  display: block;
-  margin-top: 0.4rem;
+.edit {
+  justify-content: center;
+  min-width: 6.25rem;
 }
 
-input,
-textarea {
-  box-sizing: border-box;
-  display: block;
-  width: 100%;
+.delete {
+  min-width: 6rem;
+  text-align: left;
 }
 
-.buttons {
-  margin: 0.4rem 0;
+.form {
+  margin-top: 1.75rem;
 }
 
-.buttons button + button {
-  margin-left: 0.4rem;
+.field > span {
+  color: var(--color-muted);
+  font-weight: 400;
 }
 
-.error {
-  color: #b00020;
+.save,
+.cancel {
+  min-width: 7rem;
 }

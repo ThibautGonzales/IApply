@@ -1,48 +1,81 @@
-textarea {
-  box-sizing: border-box;
-  display: block;
-  max-width: 60rem;
-  width: 100%;
+/* Section title with its number: "01  What I am looking for". */
+.numbered {
+  align-items: baseline;
+  display: flex;
+  gap: 1.25rem;
 }
 
-.thresholds {
-  margin: 0.6rem 0 0;
+.numbered span {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
-.threshold {
-  display: block;
-  margin-top: 0.3rem;
+.help {
+  color: var(--color-muted);
+  margin: 1rem 0 1.25rem;
+  max-width: 38rem;
 }
 
-.threshold input {
-  margin-left: 0.4rem;
-  width: 4rem;
-}
-
-small {
-  display: block;
-}
-
-h3 {
-  margin: 1.2rem 0 0;
-}
-
-.buttons {
-  margin-top: 0.4rem;
-}
-
-.saved {
-  margin-left: 0.6rem;
-}
-
-.searches {
-  margin-top: 0.4rem;
+.searches h3 {
+  font-size: 1.1rem;
+  margin-top: 0.75rem;
 }
 
 .searches ul {
-  margin: 0.2rem 0 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.error {
-  color: #b00020;
+.searches li {
+  padding: 1rem 0;
+}
+
+.searches li + li {
+  border-top: 1px solid #d3dccd;
+}
+
+.searches li strong {
+  color: var(--color-heading);
+  display: block;
+  font-size: 0.9rem;
+}
+
+.searches li small {
+  color: var(--color-muted);
+}
+
+.no-searches {
+  margin: 0;
+}
+
+.thresholds {
+  background: var(--color-panel);
+  margin: 2rem 0 3rem;
+}
+
+.threshold-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.5rem;
+}
+
+.threshold-fields .field {
+  margin-top: 0.5rem;
+  width: 16rem;
+}
+
+.threshold-fields span {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.thresholds .hint {
+  margin-top: 1.5rem;
+}
+
+.saved {
+  color: var(--color-green);
+  font-size: 0.85rem;
 }

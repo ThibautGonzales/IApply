@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { I18nService } from '../core/i18n/i18n.service';
+import { PageHeader } from '../shared/page-header/page-header';
 import {
   LetterExample,
   LetterExampleChange,
@@ -15,7 +16,7 @@ type Editing = 'new' | number | null;
  * when it writes a new letter. One form, used to add an example or to change one.
  */
 @Component({
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, PageHeader],
   selector: 'app-letter-examples',
   styleUrl: './letter-examples.css',
   templateUrl: './letter-examples.html',

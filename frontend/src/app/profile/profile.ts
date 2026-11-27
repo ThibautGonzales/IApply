@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { I18nService } from '../core/i18n/i18n.service';
+import { PageHeader } from '../shared/page-header/page-header';
 import { JoobleSearch, ProfileService, UserProfile } from './profile.service';
 
 /**
@@ -10,7 +11,7 @@ import { JoobleSearch, ProfileService, UserProfile } from './profile.service';
  * worked out from what they are looking for.
  */
 @Component({
-  imports: [DatePipe],
+  imports: [DatePipe, PageHeader],
   selector: 'app-profile',
   styleUrl: './profile.css',
   templateUrl: './profile.html',

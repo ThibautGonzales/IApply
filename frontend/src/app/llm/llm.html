@@ -1,66 +1,92 @@
-<h2>{{ i18n.t('llm.title') }}</h2>
-<p>{{ i18n.t('llm.help') }}</p>
+<app-page-header
+  number="06"
+  [tagline]="i18n.t('llm.tagline')"
+  [heading]="i18n.t('llm.title')"
+  [subtitle]="i18n.t('llm.help')"
+/>
 
-@if (settings(); as settings) {
-  <label>
-    {{ i18n.t('llm.provider') }}
-    <!-- [selected] on each option rather than [value] on the select: the select's value would be
-         set before @for creates the options, and the browser would fall back to the first one. -->
-    <select (change)="onProviderChange($any($event.target).value)">
-      <option value="" [selected]="!provider()">{{ i18n.t('llm.providerGuessed') }}</option>
-      @for (p of settings.providers; track p.id) {
-        <option [value]="p.id" [selected]="p.id === provider()">{{ p.label }}</option>
-      }
-    </select>
-  </label>
+<div class="with-aside">
+  <div class="card">
+    <h2>{{ i18n.t('llm.formTitle') }}</h2>
 
-  <label>
-    {{ i18n.t('llm.apiKey') }}
-    <input
-      type="password"
-      autocomplete="off"
-      [value]="apiKey()"
-      (input)="apiKey.set($any($event.target).value)"
-    />
-    <small>
-      @if (settings.api_key_hint) {
-        {{ i18n.t('llm.apiKeySaved') }} {{ settings.api_key_hint }}.
-      }
-      {{ i18n.t('llm.apiKeyLocal') }}
-    </small>
-  </label>
+    @if (settings(); as settings) {
+      <label class="field">
+        <span>{{ i18n.t('llm.provider') }}</span>
+        <!-- [selected] on each option rather than [value] on the select: the select's value would be
+             set before @for creates the options, and the browser would fall back to the first one. -->
+        <select (change)="onProviderChange($any($event.target).value)">
+          <option value="" [selected]="!provider()">{{ i18n.t('llm.providerGuessed') }}</option>
+          @for (p of settings.providers; track p.id) {
+            <option [value]="p.id" [selected]="p.id === provider()">{{ p.label }}</option>
+          }
+        </select>
+      </label>
 
-  <label>
-    {{ i18n.t('llm.model') }}
-    <input
-      type="text"
-      [value]="model()"
-      [placeholder]="defaultModel()"
-      (input)="model.set($any($event.target).value)"
-    />
-    <small>{{ i18n.t('llm.modelHelp') }}</small>
-  </label>
+      <label class="field">
+        <span>{{ i18n.t('llm.apiKey') }}</span>
+        <input
+          type="password"
+          autocomplete="off"
+          [value]="apiKey()"
+          (input)="apiKey.set($any($event.target).value)"
+        />
+        <small class="hint">
+          @if (settings.api_key_hint) {
+            {{ i18n.t('llm.apiKeySaved') }} {{ settings.api_key_hint }}.
+          }
+          {{ i18n.t('llm.apiKeyLocal') }}
+        </small>
+      </label>
 
-  <div class="buttons">
-    <button type="button" class="save" (click)="save()" [disabled]="busy()">
-      {{ i18n.t('llm.save') }}
-    </button>
-    <button
-      type="button"
-      class="test"
-      (click)="test()"
-      [disabled]="busy() || !settings.api_key_hint"
-    >
-      {{ i18n.t('llm.test') }}
-    </button>
-  </div>
-}
+      <label class="field">
+        <span>{{ i18n.t('llm.model') }}</span>
+        <input
+          type="text"
+          [value]="model()"
+          [placeholder]="defaultModel()"
+          (input)="model.set($any($event.target).value)"
+        />
+        <small class="hint">{{ i18n.t('llm.modelHelp') }}</small>
+      </label>
 
-@if (feedback(); as feedback) {
-  <p class="feedback" [class.error]="feedback.error" role="status">
-    {{ i18n.t(feedback.key) }}
-    @if (feedback.detail) {
-      <br /><small>{{ feedback.detail }}</small>
+      <div class="buttons">
+        <button type="button" class="btn btn-primary save" (click)="save()" [disabled]="busy()">
+          {{ i18n.t('llm.save') }}
+        </button>
+        <button
+          type="button"
+          class="btn test"
+          (click)="test()"
+          [disabled]="busy() || !settings.api_key_hint"
+        >
+          {{ i18n.t('llm.test') }}
+        </button>
+      </div>
     }
-  </p>
-}
+
+    @if (feedback(); as feedback) {
+      <p
+        class="message feedback"
+        [class.error]="feedback.error"
+        [class.success]="!feedback.error"
+        role="status"
+      >
+        {{ feedback.error ? '!' : '✓' }} {{ i18n.t(feedback.key) }}
+        @if (feedback.detail) {
+          <br /><small>{{ feedback.detail }}</small>
+        }
+      </p>
+    }
+  </div>
+
+  <aside class="panel">
+    <h3>{{ i18n.t('llm.asideTitle') }}</h3>
+    <p>{{ i18n.t('llm.asideIntro') }}</p>
+    <ul>
+      <li>{{ i18n.t('llm.asideScore') }}</li>
+      <li>{{ i18n.t('llm.asideRead') }}</li>
+      <li>{{ i18n.t('llm.asideWrite') }}</li>
+    </ul>
+    <p>{{ i18n.t('llm.asideStart') }}</p>
+  </aside>
+</div>
