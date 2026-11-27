@@ -91,6 +91,11 @@ const en = {
   'profile.minScoreRemote': 'Full remote:',
   'profile.minScoreHelp':
     'Out of 100. From 50, an offer is what you are looking for; under 50, it is not really.',
+  'profile.backgroundTitle': 'My background',
+  'profile.backgroundHelp':
+    'Your skills, career and work experience (or your CV, pasted). Only used to write your cover letters: nothing else will be claimed in them.',
+  'profile.backgroundPlaceholder':
+    'Skills, jobs held (company, dates, what you did), education, languages...',
   'llm.title': 'LLM',
   'llm.help': 'The AI model that scores the offers against your profile.',
   'llm.provider': 'Provider',
@@ -199,6 +204,11 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
     'profile.minScoreRemote': 'Full remote :',
     'profile.minScoreHelp':
       "Sur 100. À partir de 50, l'offre correspond à ce que tu cherches ; en dessous, pas vraiment.",
+    'profile.backgroundTitle': 'Mon parcours',
+    'profile.backgroundHelp':
+      "Tes compétences, ton parcours et tes expériences professionnelles (ou ton CV, collé). Ne sert qu'à écrire tes lettres de motivation : rien d'autre n'y sera affirmé.",
+    'profile.backgroundPlaceholder':
+      'Compétences, postes occupés (entreprise, dates, ce que tu as fait), formation, langues...',
     'llm.title': 'LLM',
     'llm.help': "Le modèle d'IA qui note les offres par rapport à ton profil.",
     'llm.provider': 'Fournisseur',

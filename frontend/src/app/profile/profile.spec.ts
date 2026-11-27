@@ -6,6 +6,7 @@ import { UserProfile } from './profile.service';
 
 const profile: UserProfile = {
   looking_for: 'Python backend developer, Clermont-Ferrand or remote',
+  background: '5 years of Python at Michelin',
   min_score_onsite: 50,
   min_score_remote: 70,
   updated_at: '2026-11-26T13:00:00Z',
@@ -34,15 +35,21 @@ describe('Profile', () => {
   it('shows the saved profile in the text box', async () => {
     const { compiled } = await render(profile);
 
-    expect(compiled.querySelector('textarea')?.value).toBe(profile.looking_for);
+    expect(compiled.querySelector<HTMLTextAreaElement>('.looking-for')?.value).toBe(
+      profile.looking_for,
+    );
+    expect(compiled.querySelector<HTMLTextAreaElement>('.background')?.value).toBe(
+      profile.background,
+    );
     expect(compiled.querySelector<HTMLInputElement>('.onsite')?.value).toBe('50');
     expect(compiled.querySelector<HTMLInputElement>('.remote')?.value).toBe('70');
   });
 
   it('saves the text and confirms it', async () => {
-    const { fixture, compiled } = await render({ ...profile, looking_for: '' });
+    const { fixture, compiled } = await render({ ...profile, looking_for: '', background: '' });
 
-    compiled.querySelector('textarea')!.value = 'AI developer, remote';
+    compiled.querySelector<HTMLTextAreaElement>('.looking-for')!.value = 'AI developer, remote';
+    compiled.querySelector<HTMLTextAreaElement>('.background')!.value = '3 years of Angular';
     compiled.querySelector<HTMLInputElement>('.onsite')!.value = '65';
     compiled.querySelector<HTMLInputElement>('.remote')!.value = '80';
     compiled.querySelector('button')!.click();
@@ -50,12 +57,14 @@ describe('Profile', () => {
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toEqual({
       looking_for: 'AI developer, remote',
+      background: '3 years of Angular',
       min_score_onsite: 65,
       min_score_remote: 80,
     });
     request.flush({
       ...profile,
       looking_for: 'AI developer, remote',
+      background: '3 years of Angular',
       min_score_onsite: 65,
       min_score_remote: 80,
     });
