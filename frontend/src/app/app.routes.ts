@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { Applications } from './applications/applications';
+import { LetterPage } from './cover-letter/letter-page';
 import { Jobs } from './jobs/jobs';
 import { LetterExamples } from './letter-examples/letter-examples';
 import { Llm } from './llm/llm';
@@ -12,6 +13,7 @@ export const routes: Routes = [
   { path: 'applications', component: Applications },
   { path: 'profile', component: Profile },
   { path: 'letter-examples', component: LetterExamples },
+  { path: 'jobs/:id/letter', component: LetterPage },
   { path: 'llm', component: Llm },
   // Any unknown address goes back to the offers.
   { path: '**', redirectTo: '' },

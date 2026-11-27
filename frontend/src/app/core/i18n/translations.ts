@@ -97,6 +97,29 @@ const en = {
     'Your skills, career and work experience (or your CV, pasted). Only used to write your cover letters: nothing else will be claimed in them.',
   'profile.backgroundPlaceholder':
     'Skills, jobs held (company, dates, what you did), education, languages...',
+  'letter.generate': 'Generate the cover letter',
+  'letter.generating': 'Writing the letter...',
+  'letter.needsDescription': 'Paste the offer text first.',
+  'letter.open': 'View the cover letter',
+  'letter.failed': 'Failed:',
+  'letter.back': 'Back',
+  'letter.title': 'Cover letter',
+  'letter.save': 'Save',
+  'letter.copy': 'Copy',
+  'letter.copied': 'Copied',
+  'letter.unsaved': 'Changes not saved',
+  'letter.savedOn': 'Saved on',
+  'letter.askTitle': 'Ask the AI for changes',
+  'letter.costWarning':
+    'Each request sends your profile, your letter examples, the offer and the letter to the AI: many requests can quickly cost money. Small changes are free by hand.',
+  'letter.instructionsPlaceholder':
+    'e.g. Shorter second paragraph, talk about my Docker experience',
+  'letter.revise': 'Change with the AI',
+  'letter.working': 'The AI is working...',
+  'letter.regenerate': 'Write a new letter',
+  'letter.confirmRegenerate': 'Click again: the whole letter will be replaced',
+  'letter.failedReplacements':
+    'These changes could not be made (the passage was not found once in the letter):',
   'examples.title': 'Letter examples',
   'examples.help':
     'Cover letters you already wrote. The AI follows their style when it writes a new letter for an offer.',
@@ -224,6 +247,29 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
       "Tes compétences, ton parcours et tes expériences professionnelles (ou ton CV, collé). Ne sert qu'à écrire tes lettres de motivation : rien d'autre n'y sera affirmé.",
     'profile.backgroundPlaceholder':
       'Compétences, postes occupés (entreprise, dates, ce que tu as fait), formation, langues...',
+    'letter.generate': 'Générer la lettre de motivation',
+    'letter.generating': 'Écriture de la lettre...',
+    'letter.needsDescription': "Colle d'abord le texte de l'offre.",
+    'letter.open': 'Voir la lettre de motivation',
+    'letter.failed': 'Échec :',
+    'letter.back': 'Retour',
+    'letter.title': 'Lettre de motivation',
+    'letter.save': 'Enregistrer',
+    'letter.copy': 'Copier',
+    'letter.copied': 'Copiée',
+    'letter.unsaved': 'Modifications non enregistrées',
+    'letter.savedOn': 'Enregistrée le',
+    'letter.askTitle': "Demander des modifications à l'IA",
+    'letter.costWarning':
+      "Chaque demande envoie ton profil, tes lettres exemples, l'offre et la lettre à l'IA : beaucoup de demandes peuvent vite coûter cher. Les petites retouches à la main sont gratuites.",
+    'letter.instructionsPlaceholder':
+      'ex. Deuxième paragraphe plus court, parle de mon expérience Docker',
+    'letter.revise': "Modifier avec l'IA",
+    'letter.working': "L'IA travaille...",
+    'letter.regenerate': 'Écrire une nouvelle lettre',
+    'letter.confirmRegenerate': 'Cliquer à nouveau : toute la lettre sera remplacée',
+    'letter.failedReplacements':
+      "Ces modifications n'ont pas pu être faites (le passage n'a pas été trouvé une seule fois dans la lettre) :",
     'examples.title': 'Lettres exemples',
     'examples.help':
       "Les lettres de motivation que tu as déjà écrites. L'IA suit leur style quand elle écrit une nouvelle lettre pour une offre.",

@@ -17,3 +17,11 @@ textarea {
 .buttons button + button {
   margin-left: 0.4rem;
 }
+
+.letter small {
+  margin-left: 0.6rem;
+}
+
+.error {
+  color: #b00020;
+}

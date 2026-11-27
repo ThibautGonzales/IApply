@@ -1,0 +1,76 @@
+<section>
+  <button type="button" class="back" (click)="back()">{{ i18n.t('letter.back') }}</button>
+  <h2>{{ i18n.t('letter.title') }}</h2>
+  @if (job(); as job) {
+    <p class="job">
+      <a [href]="job.url" target="_blank" rel="noopener">{{ job.title }}</a>
+      @if (job.company) {
+        · {{ job.company }}
+      }
+    </p>
+  }
+
+  @if (letter(); as letter) {
+    <textarea
+      class="text"
+      rows="24"
+      [value]="text()"
+      (input)="edit($any($event.target).value)"
+    ></textarea>
+    <div class="buttons">
+      <button type="button" class="save" [disabled]="busy() || !unsaved()" (click)="save()">
+        {{ i18n.t('letter.save') }}
+      </button>
+      <button type="button" class="copy" (click)="copy()">
+        {{ copied() ? i18n.t('letter.copied') : i18n.t('letter.copy') }}
+      </button>
+      <span class="status">
+        @if (unsaved()) {
+          {{ i18n.t('letter.unsaved') }}
+        } @else {
+          {{ i18n.t('letter.savedOn') }} {{ letter.updated_at | date: 'short' }}
+        }
+      </span>
+    </div>
+
+    <h3>{{ i18n.t('letter.askTitle') }}</h3>
+    <p class="warning">{{ i18n.t('letter.costWarning') }}</p>
+    <textarea
+      class="instructions"
+      rows="4"
+      [value]="instructions()"
+      [placeholder]="i18n.t('letter.instructionsPlaceholder')"
+      (input)="instructions.set($any($event.target).value)"
+    ></textarea>
+    <div class="buttons">
+      <button
+        type="button"
+        class="revise"
+        [disabled]="busy() || !instructions().trim()"
+        (click)="revise()"
+      >
+        {{ busy() ? i18n.t('letter.working') : i18n.t('letter.revise') }}
+      </button>
+      <button type="button" class="regenerate" [disabled]="busy()" (click)="regenerate()">
+        {{
+          confirmingRegenerate() ? i18n.t('letter.confirmRegenerate') : i18n.t('letter.regenerate')
+        }}
+      </button>
+    </div>
+
+    @if (failed().length) {
+      <div class="failed">
+        <p>{{ i18n.t('letter.failedReplacements') }}</p>
+        <ul>
+          @for (replacement of failed(); track $index) {
+            <li>« {{ replacement.old }} » → « {{ replacement.new }} »</li>
+          }
+        </ul>
+      </div>
+    }
+  }
+
+  @if (error() !== null) {
+    <p class="error">{{ i18n.t('letter.failed') }} {{ error() }}</p>
+  }
+</section>

@@ -136,6 +136,12 @@ def get_job_or_404(session: Session, job_id: int) -> JobOffer:
     return job
 
 
+@app.get("/jobs/{job_id}")
+def read_job(job_id: int, session: SessionDep) -> JobOffer:
+    """One offer, for the cover letter page (opened from its own address)."""
+    return get_job_or_404(session, job_id)
+
+
 @app.post("/jobs/{job_id}/hide", status_code=status.HTTP_204_NO_CONTENT)
 def hide_job(job_id: int, session: SessionDep) -> None:
     """Remove an offer from the list. It stays in the database so a collection does not bring it back."""

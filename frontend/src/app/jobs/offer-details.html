@@ -33,3 +33,27 @@
 <p>
   <a [href]="job().url" target="_blank" rel="noopener">{{ i18n.t('offer.originalPosting') }}</a>
 </p>
+
+<div class="letter">
+  @if (letter() === 'ready') {
+    <button type="button" class="open-letter" (click)="openLetter()">
+      {{ i18n.t('letter.open') }}
+    </button>
+  } @else if (letter() === 'none') {
+    <!-- Without the offer text, the letter could only be generic. -->
+    <button
+      type="button"
+      class="generate"
+      [disabled]="!job().description || generating()"
+      (click)="generate()"
+    >
+      {{ generating() ? i18n.t('letter.generating') : i18n.t('letter.generate') }}
+    </button>
+    @if (!job().description) {
+      <small>{{ i18n.t('letter.needsDescription') }}</small>
+    }
+  }
+  @if (letterError() !== null) {
+    <p class="error">{{ i18n.t('letter.failed') }} {{ letterError() }}</p>
+  }
+</div>
