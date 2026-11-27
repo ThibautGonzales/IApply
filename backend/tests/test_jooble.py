@@ -4,6 +4,7 @@ from datetime import UTC, date, datetime
 import httpx
 import pytest
 
+from app.models import JoobleSearch
 from app.sources import SOURCES, jooble
 
 
@@ -25,8 +26,20 @@ def make_job(job_id: int) -> dict:
 @pytest.fixture(autouse=True)
 def jooble_env(monkeypatch):
     monkeypatch.setenv("JOOBLE_API_KEY", "test-key")
-    monkeypatch.setenv("JOOBLE_KEYWORDS", "full stack;GenAI")
-    monkeypatch.setenv("JOOBLE_INCLUDE_REMOTE", "false")  # remote searches have their own tests
+
+
+def save_searches(session, *searches: JoobleSearch) -> None:
+    session.add_all(searches)
+    session.commit()
+
+
+@pytest.fixture
+def two_local_searches(session):
+    save_searches(
+        session,
+        JoobleSearch(keywords="full stack", location="Clermont-Ferrand", radius_km=40),
+        JoobleSearch(keywords="GenAI", location="Clermont-Ferrand", radius_km=40),
+    )
 
 
 def fake_client(pages_by_keywords: dict[str, list[list[dict]]], requests: list) -> httpx.Client:
@@ -57,35 +70,35 @@ def test_to_job_offer_converts_and_cleans_a_jooble_result():
     assert offer.published_at == datetime(2026, 11, 20, 10, 31, tzinfo=UTC)
 
 
-def test_fetch_jobs_runs_one_search_per_keyword_with_the_right_body():
+def test_fetch_jobs_runs_one_search_per_keyword_with_the_right_body(session, two_local_searches):
     requests = []
     client = fake_client({"full stack": [[make_job(1)]], "GenAI": [[make_job(2)]]}, requests)
 
-    offers = jooble.fetch_jobs(date(2026, 11, 20), client)
+    offers = jooble.fetch_jobs(session, date(2026, 11, 20), client)
 
     assert [o.external_id for o in offers] == ["1", "2"]
     url, body = requests[0]
     assert str(url) == "https://fr.jooble.org/api/test-key"
-    assert body["location"] == "Clermont-Ferrand"
+    assert (body["keywords"], body["location"], body["radius"]) == ("full stack", "Clermont-Ferrand", "40")
     assert body["datecreatedfrom"] == "2026-11-20"
 
 
-def test_fetch_jobs_reads_next_page_only_when_current_page_is_full():
+def test_fetch_jobs_reads_next_page_only_when_current_page_is_full(session, two_local_searches):
     requests = []
     full_page = [make_job(i) for i in range(jooble.RESULTS_PER_PAGE)]
     client = fake_client({"full stack": [full_page, [make_job(999)]], "GenAI": [[]]}, requests)
 
-    offers = jooble.fetch_jobs(date(2026, 11, 20), client)
+    offers = jooble.fetch_jobs(session, date(2026, 11, 20), client)
 
     assert len(offers) == jooble.RESULTS_PER_PAGE + 1
     assert len(requests) == 3  # 2 pages for "full stack", 1 for "GenAI"
 
 
-def test_fetch_jobs_raises_when_jooble_answers_an_error():
+def test_fetch_jobs_raises_when_jooble_answers_an_error(session, two_local_searches):
     client = httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(403)))
 
     with pytest.raises(jooble.JoobleError) as error:
-        jooble.fetch_jobs(date(2026, 11, 20), client)
+        jooble.fetch_jobs(session, date(2026, 11, 20), client)
     assert "test-key" not in str(error.value)
 
 
@@ -93,38 +106,39 @@ def test_jooble_is_registered_as_a_source():
     assert SOURCES["jooble"] is jooble.fetch_jobs
 
 
-def test_fetch_jobs_drops_offers_older_than_since_even_if_jooble_returns_them():
+def test_fetch_jobs_drops_offers_older_than_since_even_if_jooble_returns_them(session, two_local_searches):
     old_job = make_job(1) | {"updated": "2026-07-02T00:00:00.0000000"}
     client = fake_client({"full stack": [[old_job, make_job(2)]], "GenAI": [[]]}, [])
 
-    offers = jooble.fetch_jobs(date(2026, 11, 20), client)
+    offers = jooble.fetch_jobs(session, date(2026, 11, 20), client)
 
     assert [o.external_id for o in offers] == ["2"]
 
 
-def test_remote_searches_are_added_when_enabled(monkeypatch):
-    monkeypatch.setenv("JOOBLE_INCLUDE_REMOTE", "true")
-
-    searches = jooble.build_searches(jooble.load_settings())
-
-    assert [(s.keywords, s.location, s.radius_km) for s in searches] == [
-        ("full stack", "Clermont-Ferrand", "40"),
-        ("GenAI", "Clermont-Ferrand", "40"),
-        ("full stack", "Télétravail", ""),
-        ("GenAI", "Télétravail", ""),
-    ]
-
-
-def test_remote_search_sends_no_radius(monkeypatch):
-    monkeypatch.setenv("JOOBLE_INCLUDE_REMOTE", "true")
-    monkeypatch.setenv("JOOBLE_KEYWORDS", "full stack")
+def test_a_remote_search_sends_the_remote_location_and_no_radius(session):
+    save_searches(session, JoobleSearch(keywords="full stack", remote=True))
     requests = []
     client = fake_client({"full stack": [[]]}, requests)
 
-    jooble.fetch_jobs(date(2026, 11, 20), client)
+    jooble.fetch_jobs(session, date(2026, 11, 20), client)
 
-    assert requests[1][1]["location"] == "Télétravail"
-    assert "radius" not in requests[1][1]
+    assert requests[0][1]["location"] == "Télétravail"
+    assert "radius" not in requests[0][1]
+
+
+def test_a_local_search_without_radius_sends_none(session):
+    save_searches(session, JoobleSearch(keywords="full stack", location="Lyon"))
+    requests = []
+
+    jooble.fetch_jobs(session, date(2026, 11, 20), fake_client({"full stack": [[]]}, requests))
+
+    assert "radius" not in requests[0][1]
+
+
+def test_without_searches_the_collection_asks_for_a_profile(session):
+    with pytest.raises(jooble.JoobleError) as error:
+        jooble.fetch_jobs(session, date(2026, 11, 20), fake_client({}, []))
+    assert "Profile page" in str(error.value)
 
 
 def test_offers_are_flagged_remote_by_search_or_location():
@@ -133,13 +147,16 @@ def test_offers_are_flagged_remote_by_search_or_location():
     assert jooble.to_job_offer(make_job(1) | {"location": "Télétravail"}).remote is True
 
 
-def test_offer_found_by_local_and_remote_search_is_kept_once_as_remote(monkeypatch):
-    monkeypatch.setenv("JOOBLE_INCLUDE_REMOTE", "true")
-    monkeypatch.setenv("JOOBLE_KEYWORDS", "full stack")
+def test_offer_found_by_local_and_remote_search_is_kept_once_as_remote(session):
+    save_searches(
+        session,
+        JoobleSearch(keywords="full stack", location="Clermont-Ferrand", radius_km=40),
+        JoobleSearch(keywords="full stack", remote=True),
+    )
     # The fake client answers by keywords only, so both searches return job 1.
     client = fake_client({"full stack": [[make_job(1)]]}, [])
 
-    offers = jooble.fetch_jobs(date(2026, 11, 20), client)
+    offers = jooble.fetch_jobs(session, date(2026, 11, 20), client)
 
     assert len(offers) == 1
     assert offers[0].remote is True

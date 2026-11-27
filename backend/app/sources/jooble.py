@@ -10,8 +10,10 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 
 import httpx
+from sqlmodel import Session
 
-from app.models import JobOffer
+from app.models import JobOffer, JoobleSearch
+from app.search_planning import saved_searches
 
 SOURCE_NAME = "jooble"
 RESULTS_PER_PAGE = 50
@@ -20,70 +22,56 @@ MAX_PAGES_PER_SEARCH = 5
 
 
 class JoobleError(Exception):
-    """Jooble answered an error (bad key, wrong host, quota reached...)."""
+    """Jooble answered an error (bad key, wrong host, quota reached...), or there is nothing to search."""
+
+
+# Jooble lists full remote offers under this location.
+REMOTE_LOCATION = "Télétravail"
 
 
 @dataclass
 class JoobleSettings:
     api_key: str
     host: str
-    keywords: list[str]
-    location: str
-    radius_km: str
-    include_remote: bool
-    # Jooble lists remote offers under the "Télétravail" location.
-    remote_location: str
-    remote_keyword: str  # optional word added to each keyword for the remote searches
-
-
-@dataclass
-class Search:
-    """One Jooble query: keywords around a place."""
-
-    keywords: str
-    location: str
-    radius_km: str = ""  # empty: no radius sent
-    remote: bool = False  # the offers it finds are full remote
 
 
 def load_settings() -> JoobleSettings:
-    """Read the Jooble settings from the environment (see .env.example)."""
+    """Read the API key and host from the environment (see .env.example).
+
+    What to search for is not set here: it comes from the profile (`JoobleSearch`).
+    """
     api_key = os.environ.get("JOOBLE_API_KEY")
     if not api_key:
         raise JoobleError("JOOBLE_API_KEY is not set (see .env.example)")
-    keywords = os.environ.get("JOOBLE_KEYWORDS", "développeur full stack;développeur IA;GenAI")
-    return JoobleSettings(
-        api_key=api_key,
-        host=os.environ.get("JOOBLE_HOST", "fr.jooble.org"),
-        keywords=[k.strip() for k in keywords.split(";") if k.strip()],
-        location=os.environ.get("JOOBLE_LOCATION", "Clermont-Ferrand"),
-        radius_km=os.environ.get("JOOBLE_RADIUS_KM", "40"),
-        include_remote=os.environ.get("JOOBLE_INCLUDE_REMOTE", "true").lower() == "true",
-        remote_location=os.environ.get("JOOBLE_REMOTE_LOCATION", "Télétravail"),
-        remote_keyword=os.environ.get("JOOBLE_REMOTE_KEYWORD", ""),
-    )
+    return JoobleSettings(api_key=api_key, host=os.environ.get("JOOBLE_HOST", "fr.jooble.org"))
 
 
-def build_searches(settings: JoobleSettings) -> list[Search]:
-    """One local search per keyword, plus one remote search per keyword if enabled."""
-    searches = [Search(k, settings.location, settings.radius_km) for k in settings.keywords]
-    if settings.include_remote:
-        searches += [
-            Search(f"{k} {settings.remote_keyword}".strip(), settings.remote_location, remote=True)
-            for k in settings.keywords
-        ]
+def load_searches(session: Session) -> list[JoobleSearch]:
+    searches = saved_searches(session)
+    if not searches:
+        raise JoobleError("No search yet: set up the LLM, then describe what you are looking for on the Profile page")
     return searches
 
 
-def fetch_jobs(since: date, client: httpx.Client | None = None) -> list[JobOffer]:
-    """Return the Jooble offers published since `since`, for every configured search."""
+def search_body(search: JoobleSearch) -> dict[str, str]:
+    """The part of the request body that says what to look for, and where."""
+    if search.remote:
+        return {"keywords": search.keywords, "location": REMOTE_LOCATION}
+    body = {"keywords": search.keywords, "location": search.location or ""}
+    if search.radius_km is not None:
+        body["radius"] = str(search.radius_km)
+    return body
+
+
+def fetch_jobs(session: Session, since: date, client: httpx.Client | None = None) -> list[JobOffer]:
+    """Return the Jooble offers published since `since`, for every search worked out from the profile."""
     if client is None:
         with httpx.Client(timeout=30) as client:
-            return fetch_jobs(since, client)
+            return fetch_jobs(session, since, client)
 
     settings = load_settings()
     offers_by_id: dict[str, JobOffer] = {}
-    for search in build_searches(settings):
+    for search in load_searches(session):
         for offer in _search(client, settings, search, since):
             # An offer found by both a local and a remote search is kept once, as remote.
             if offer.external_id in offers_by_id:
@@ -93,19 +81,15 @@ def fetch_jobs(since: date, client: httpx.Client | None = None) -> list[JobOffer
     return list(offers_by_id.values())
 
 
-def _search(client: httpx.Client, settings: JoobleSettings, search: Search, since: date) -> list[JobOffer]:
+def _search(client: httpx.Client, settings: JoobleSettings, search: JoobleSearch, since: date) -> list[JobOffer]:
     """Run one search, page by page, until a page comes back incomplete."""
     offers: list[JobOffer] = []
     for page in range(1, MAX_PAGES_PER_SEARCH + 1):
-        body = {
-            "keywords": search.keywords,
-            "location": search.location,
+        body = search_body(search) | {
             "datecreatedfrom": since.isoformat(),  # "YYYY-MM-DD"
             "page": str(page),
             "ResultOnPage": str(RESULTS_PER_PAGE),
         }
-        if search.radius_km:
-            body["radius"] = search.radius_km
         response = client.post(f"https://{settings.host}/api/{settings.api_key}", json=body)
         if response.is_error:
             # Not raise_for_status(): its message contains the URL, and so the API key.
