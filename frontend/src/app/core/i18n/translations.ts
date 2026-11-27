@@ -97,6 +97,11 @@ const en = {
     'Your skills, career and work experience (or your CV, pasted). Only used to write your cover letters: nothing else will be claimed in them.',
   'profile.backgroundPlaceholder':
     'Skills, jobs held (company, dates, what you did), education, languages...',
+  'profile.searchesTitle': 'Jooble searches worked out by the AI from this text:',
+  'profile.searchesNone': 'None yet: save what you are looking for and the AI will work them out.',
+  'profile.searchRemote': 'in full remote',
+  'profile.searchIn': 'in',
+  'profile.failed': 'Not saved.',
   'letter.generate': 'Generate the cover letter',
   'letter.generating': 'Writing the letter...',
   'letter.needsDescription': 'Paste the offer text first.',
@@ -247,6 +252,12 @@ export const translations: Record<Language, Record<TranslationKey, string>> = {
       "Tes compétences, ton parcours et tes expériences professionnelles (ou ton CV, collé). Ne sert qu'à écrire tes lettres de motivation : rien d'autre n'y sera affirmé.",
     'profile.backgroundPlaceholder':
       'Compétences, postes occupés (entreprise, dates, ce que tu as fait), formation, langues...',
+    'profile.searchesTitle': "Recherches Jooble déduites de ce texte par l'IA :",
+    'profile.searchesNone':
+      "Aucune pour l'instant : enregistre ce que tu cherches et l'IA les déduira.",
+    'profile.searchRemote': 'en full remote',
+    'profile.searchIn': 'à',
+    'profile.failed': 'Non enregistré.',
     'letter.generate': 'Générer la lettre de motivation',
     'letter.generating': 'Écriture de la lettre...',
     'letter.needsDescription': "Colle d'abord le texte de l'offre.",

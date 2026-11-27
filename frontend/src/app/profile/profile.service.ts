@@ -14,6 +14,16 @@ export interface UserProfile {
   updated_at: string;
 }
 
+/** One Jooble query of the collection, worked out by the LLM from `looking_for` (backend `JoobleSearch`). */
+export interface JoobleSearch {
+  id: number;
+  keywords: string;
+  /** Full remote offers, anywhere: no location nor radius then. */
+  remote: boolean;
+  location: string | null;
+  radius_km: number | null;
+}
+
 /** Talks to the backend `/profile` routes. */
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
@@ -21,6 +31,10 @@ export class ProfileService {
 
   getProfile(): Observable<UserProfile> {
     return this.http.get<UserProfile>('/api/profile');
+  }
+
+  getSearches(): Observable<JoobleSearch[]> {
+    return this.http.get<JoobleSearch[]>('/api/profile/searches');
   }
 
   saveProfile(
