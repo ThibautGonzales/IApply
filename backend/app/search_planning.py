@@ -6,6 +6,7 @@ Same approach as `scoring.py`: one prompt, and a structured answer validated by 
 
 from langchain_core.language_models import BaseChatModel
 from pydantic import BaseModel, Field
+from sqlmodel import Session, select
 
 from app.models import JoobleSearch
 
@@ -67,3 +68,25 @@ def to_jooble_search(search: PlannedSearch) -> JoobleSearch:
         location=(search.location or "").strip() or None,
         radius_km=search.radius_km,
     )
+
+
+# ---------- When the profile is saved ----------
+
+
+def saved_searches(session: Session) -> list[JoobleSearch]:
+    return list(session.exec(select(JoobleSearch).order_by(JoobleSearch.id)).all())
+
+
+def searches_are_outdated(session: Session, old_looking_for: str, new_looking_for: str) -> bool:
+    """New searches are needed when the text changed, or when there are none yet for a text.
+
+    Saving only the background or a threshold does not pay for an LLM call.
+    """
+    return new_looking_for != old_looking_for or (bool(new_looking_for) and not saved_searches(session))
+
+
+def replace_searches(session: Session, searches: list[JoobleSearch]) -> None:
+    """Swap the saved searches for these ones. Not committed: the caller commits with the profile."""
+    for search in saved_searches(session):
+        session.delete(search)
+    session.add_all(searches)

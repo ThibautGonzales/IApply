@@ -36,6 +36,7 @@ from app.models import (
     CoverLetterRevision,
     DescriptionChange,
     JobOffer,
+    JoobleSearch,
     LetterExampleChange,
     LlmSettings,
     LlmSettingsChange,
@@ -48,6 +49,7 @@ from app.models import (
     UserProfile,
     utc_now,
 )
+from app.search_planning import plan_searches, replace_searches, saved_searches, searches_are_outdated
 from app.tracking import close_stale_applications
 
 app = FastAPI(title="IApply API")
@@ -321,9 +323,16 @@ def get_profile(session: SessionDep) -> UserProfile:
 
 @app.put("/profile", response_model_exclude={"id"})
 def change_profile(change: ProfileChange, session: SessionDep) -> UserProfile:
-    """Save what the user is looking for, their background and the score thresholds."""
+    """Save what the user is looking for, their background and the score thresholds.
+
+    When what they are looking for changes, the LLM works out the Jooble searches again first:
+    if it fails, nothing is saved, so the profile and its searches always go together.
+    """
     profile = get_the_profile(session)
-    profile.looking_for = change.looking_for.strip()
+    looking_for = change.looking_for.strip()
+    if searches_are_outdated(session, profile.looking_for, looking_for):
+        replace_searches(session, plan_searches_or_400(session, looking_for))
+    profile.looking_for = looking_for
     if change.background is not None:
         profile.background = change.background.strip()
     if change.min_score_onsite is not None:
@@ -335,6 +344,24 @@ def change_profile(change: ProfileChange, session: SessionDep) -> UserProfile:
     session.commit()
     session.refresh(profile)
     return profile
+
+
+def plan_searches_or_400(session: Session, looking_for: str) -> list[JoobleSearch]:
+    if not looking_for:
+        return []  # nothing to search for: no LLM call
+    try:
+        return plan_searches(get_chat_model(get_settings(session)), looking_for)
+    except Exception as error:  # no LLM set up, or a provider error (bad key, quota...): shown as it is
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Could not work out the Jooble searches, the profile was not saved: {error}",
+        ) from error
+
+
+@app.get("/profile/searches")
+def list_searches(session: SessionDep) -> list[JoobleSearch]:
+    """The Jooble searches of the collection, as worked out by the LLM from the profile."""
+    return saved_searches(session)
 
 
 @app.get("/letter-examples")
