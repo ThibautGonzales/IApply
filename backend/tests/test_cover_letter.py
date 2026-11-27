@@ -57,6 +57,15 @@ def test_the_prompt_holds_the_profile_the_examples_and_the_offer(session):
     assert "Letter for Michelin, 2025" not in prompt  # the title is only for the user
 
 
+def test_the_prompt_says_the_letters_are_true_facts_too(session):
+    fill_profile(session)
+    prompt = generation_prompt(session.get_one(UserProfile, 1), [], make_offer(session))
+
+    one_line = prompt.replace("\n", " ")  # the prompt is cut in lines: compare without them
+    assert "is true as well, like their background" in one_line
+    assert "neither in their background nor in their letters" in one_line
+
+
 def test_without_examples_the_prompt_asks_for_a_classic_letter(session):
     fill_profile(session)
     prompt = generation_prompt(session.get_one(UserProfile, 1), [], make_offer(session))
@@ -117,6 +126,15 @@ def test_no_letter_without_the_background(client, session, monkeypatch):
 
     assert response.status_code == 400
     assert "background" in response.json()["detail"]
+
+
+def test_a_letter_example_is_enough_without_the_background(client, session, monkeypatch):
+    fill_profile(session, background="")
+    client.post("/letter-examples", json={"title": "Michelin", "text": "J'ai 5 ans de Python..."})
+    offer = make_offer(session)
+    fake_llm(monkeypatch)
+
+    assert client.post(f"/jobs/{offer.id}/cover-letter").status_code == 200
 
 
 def test_no_letter_without_an_llm(client, session):

@@ -1,7 +1,7 @@
 """Cover letters: the LLM writes one for an offer, from the user's profile and their own letters.
 
 The LLM gets what the user wrote about themselves (background, what they look for), the letters
-they already wrote (to follow their style) and the offer text. It answers with the letter as plain
+they already wrote (their style, and more true facts about them) and the offer text. It answers with the letter as plain
 text, in one call: no structured output, the whole answer is the letter.
 """
 
@@ -16,7 +16,7 @@ class MissingOfferTextError(Exception):
 
 
 class MissingBackgroundError(Exception):
-    """The user has not described their background: the LLM would have nothing true to say."""
+    """No background and no letter example: the LLM would have nothing true to say about the user."""
 
 
 # ---------- Prompt ----------
@@ -36,14 +36,17 @@ def describe_examples(examples: list[CoverLetterExample]) -> str:
 def letter_context(profile: UserProfile, examples: list[CoverLetterExample], offer: JobOffer) -> str:
     """What the LLM must know to write a letter, or to change one (the changes come with the next step)."""
     return (
-        "Their background, in their own words. Never claim a skill, a job, a degree or any fact\n"
-        "about them that is not written here:\n"
-        f"{profile.background}\n\n"
+        "Their background, in their own words. It is true: use it freely.\n"
+        f"{profile.background or '(not given)'}\n\n"
         "What they are looking for:\n"
         f"{profile.looking_for}\n\n"
         "Cover letters they already wrote. Follow their style: tone, structure, length, how they\n"
-        "open and sign. Do not reuse what they wrote about other companies:\n"
+        "open and sign. What these letters say about the job seeker (skills, jobs, projects,\n"
+        "results, motivations) is true as well, like their background: reuse it when it fits the\n"
+        "offer. Only what they say about the companies they were written for is not to be reused.\n"
         f"{describe_examples(examples)}\n\n"
+        "Never claim a skill, a job, a degree or any fact about the job seeker that is neither in\n"
+        "their background nor in their letters.\n\n"
         "The job offer:\n"
         f"{describe_offer(offer)}"
     )
@@ -85,8 +88,11 @@ def check_can_write(session: Session, offer: JobOffer) -> UserProfile:
     if not offer.description:
         raise MissingOfferTextError("Paste the offer text first (View offer).")
     profile = session.get_one(UserProfile, 1)
-    if not profile.background:
-        raise MissingBackgroundError("Describe your background on the Profile page first.")
+    # The letter examples say true things about the user too: one of them is enough without a background.
+    if not profile.background and session.exec(select(CoverLetterExample)).first() is None:
+        raise MissingBackgroundError(
+            "Describe your background on the Profile page, or add a letter example, first."
+        )
     return profile
 
 
