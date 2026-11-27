@@ -20,8 +20,10 @@ from app.manual_offer import DuplicateOfferError, ExtractedOffer, extract_offer,
 from app.models import (
     Application,
     ApplicationWithJob,
+    CoverLetterExample,
     DescriptionChange,
     JobOffer,
+    LetterExampleChange,
     LlmSettings,
     LlmSettingsChange,
     LlmSettingsView,
@@ -263,6 +265,46 @@ def change_profile(change: ProfileChange, session: SessionDep) -> UserProfile:
     session.commit()
     session.refresh(profile)
     return profile
+
+
+@app.get("/letter-examples")
+def list_letter_examples(session: SessionDep) -> list[CoverLetterExample]:
+    """The cover letters the user already wrote, in the order they were added."""
+    return list(session.exec(select(CoverLetterExample).order_by(col(CoverLetterExample.id))).all())
+
+
+@app.post("/letter-examples", status_code=status.HTTP_201_CREATED)
+def add_letter_example(change: LetterExampleChange, session: SessionDep) -> CoverLetterExample:
+    example = CoverLetterExample(title=change.title.strip(), text=change.text.strip())
+    session.add(example)
+    session.commit()
+    session.refresh(example)
+    return example
+
+
+def get_letter_example_or_404(session: Session, example_id: int) -> CoverLetterExample:
+    example = session.get(CoverLetterExample, example_id)
+    if example is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Letter example not found")
+    return example
+
+
+@app.put("/letter-examples/{example_id}")
+def change_letter_example(example_id: int, change: LetterExampleChange, session: SessionDep) -> CoverLetterExample:
+    example = get_letter_example_or_404(session, example_id)
+    example.title = change.title.strip()
+    example.text = change.text.strip()
+    session.add(example)
+    session.commit()
+    session.refresh(example)
+    return example
+
+
+@app.delete("/letter-examples/{example_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_letter_example(example_id: int, session: SessionDep) -> None:
+    """A real delete: an example is the user's own text, nothing brings it back like a collection would."""
+    session.delete(get_letter_example_or_404(session, example_id))
+    session.commit()
 
 
 def settings_view(settings: LlmSettings) -> LlmSettingsView:

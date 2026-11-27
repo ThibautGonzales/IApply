@@ -90,6 +90,17 @@ class UserProfile(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
 
 
+class CoverLetterExample(SQLModel, table=True):
+    """A cover letter the user already wrote. The LLM follows their style when it writes a new one."""
+
+    __tablename__ = "cover_letter_example"
+
+    id: int | None = Field(default=None, primary_key=True)
+    title: str = Field(max_length=200)  # a short name to find it in the list, e.g. "Data engineer at Michelin"
+    text: str = Field(sa_type=Text)
+    created_at: datetime = Field(default_factory=utc_now, sa_type=DateTime(timezone=True))
+
+
 class LlmSettings(SQLModel, table=True):
     """The LLM chosen on the LLM page. One row (id 1), created by a migration.
 
@@ -158,6 +169,13 @@ class ProfileChange(SQLModel):
     # Out of 0-100: refused by FastAPI (422).
     min_score_onsite: int | None = Field(default=None, ge=0, le=100)
     min_score_remote: int | None = Field(default=None, ge=0, le=100)
+
+
+class LetterExampleChange(SQLModel):
+    """Body of `POST /letter-examples` and `PUT /letter-examples/{id}`. Both fields are required."""
+
+    title: str = Field(min_length=1, max_length=200)
+    text: str = Field(min_length=1)
 
 
 class LlmSettingsChange(SQLModel):
